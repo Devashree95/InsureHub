@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-RUN git clone https://kanadn:glpat-N6k13ZWsss9ySa4bM4xZ@version.cs.vt.edu/kanadn/paperpalooza.git
+RUN git clone https://kanadn:glpat-N6k13ZWsss9ySa4bM4xZ@version.cs.vt.edu/kanadn/insurehub.git
 
 WORKDIR /app/insurehub
 

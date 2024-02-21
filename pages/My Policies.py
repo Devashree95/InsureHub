@@ -1,10 +1,12 @@
 import streamlit as st
 import helpers.sidebar
-import requests
+import pandas as pd
 import streamlit.components.v1 as components
 from datetime import datetime
 from PIL import Image
 import base64
+
+from helpers import connection as conn
 
 
 helpers.sidebar.show()
@@ -35,3 +37,10 @@ st.markdown(f"""
 
 st.title('Welcome to Insurehub!')
 
+st.write('Here are your policies:')
+
+rows, columns = conn.pgsql_connect()
+
+df = pd.DataFrame(rows, columns=columns)
+
+st.dataframe(df)
