@@ -1,0 +1,8 @@
+pandas
+pdfplumber
+Pillow
+pyzotero
+Requests
+services
+streamlit
+streamlit_option_menu
