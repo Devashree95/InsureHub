@@ -40,3 +40,4 @@ st.markdown(f"""
 helpers.sidebar.show()
 
 st.markdown("Welcome to InsureHub!")
+

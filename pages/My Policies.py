@@ -10,6 +10,9 @@ from helpers import connection as conn
 
 
 helpers.sidebar.show()
+connection = conn.pgsql_connect()
+cur = connection.cursor()
+
 
 logo = "./images/profile_3135715.png"
 image = Image.open(logo)
@@ -19,6 +22,14 @@ def get_image_as_base64(path):
     with open(path, "rb") as image_file:
         data = base64.b64encode(image_file.read()).decode()
         return f"data:image/jpeg;base64,{data}"
+    
+def getPolicyDetails(custId):
+    cur.execute(f"select pl.* from insurehub.policy pl join insurehub.purchases pur on pl.policy_id = pur.policy_id where cust_id = '{custId}'")
+    
+    rows = cur.fetchall()
+    columns = [desc[0] for desc in cur.description]
+    return rows, columns
+    
 	
 image_base64 = get_image_as_base64(logo)
 
@@ -33,14 +44,19 @@ st.markdown(f"""
 				""", unsafe_allow_html=True)
 
 
-
-
 st.title('Welcome to Insurehub!')
 
 st.write('Here are your policies:')
 
-rows, columns = conn.pgsql_connect()
+custId = '3E6BA8C7-DCA6-7296-2DD1-729B1B1731D6'
+
+rows, columns = getPolicyDetails(custId)
 
 df = pd.DataFrame(rows, columns=columns)
+columns = ['policy_id','start_date', 'end_date', 'tot_coverage_amt' ]
+df = df[columns]
+
+# Rename columns
+df = df.rename(columns={'policy_id': 'POLICY ID', 'start_date': 'START DATE', 'end_date': 'END DATE', 'tot_coverage_amt': 'Coverage Amount'})
 
 st.dataframe(df)
