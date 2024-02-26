@@ -36,7 +36,7 @@ st.markdown(f"""
 			<br>
 				""", unsafe_allow_html=True)
 
-custId = '3E6BA8C7-DCA6-7296-2DD1-729B1B1731D6'
+custId = '2DECA7C8-395E-5B44-4A3B-C792143C9F45'
 
 def getProfileDetails(attr):
     cur.execute(f"select {attr} from insurehub.customer where cust_id = '{custId}'")
