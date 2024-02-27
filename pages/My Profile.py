@@ -42,19 +42,54 @@ def getProfileDetails(attr):
     cur.execute(f"select {attr} from insurehub.customer where cust_id = '{custId}'")
     return cur.fetchall()[0][0]
 
+def getPhoneDetails(attr):
+    cur.execute(f"select phone from insurehub.cust_phone where cust_id = '{custId}'")
+    return cur.fetchall()
+
 def updateDbTable(attr, val):
-    cur.execute(f"update insurehub.customer SET {attr} = '{val}' where cust_id = '{custId}'")
-    connection.commit()
+    print(val)
+    if attr == 'phone1':
+        cur.execute(f"update insurehub.cust_phone SET phone = '{val}' where cust_id = '{custId}' and phone= '{phone_no_1}'")
+        connection.commit()
+    elif attr == 'phone2':
+        if val == '':
+            cur.execute(f"delete from insurehub.cust_phone where cust_id = '{custId}' and phone= '{phone_no_2}'")
+            connection.commit()
+            
+        if phone_no_2 == '':
+            cur.execute(f"insert into insurehub.cust_phone VALUES ('{custId}','{val}')")
+            connection.commit()
+        else:
+            cur.execute(f"update insurehub.cust_phone SET phone = '{val}' where cust_id = '{custId}' and phone= '{phone_no_2}'")
+            connection.commit()
+    else:
+        cur.execute(f"update insurehub.customer SET {attr} = '{val}' where cust_id = '{custId}'")
+        connection.commit()
+
+phone_no = getPhoneDetails('phone')
+if len(phone_no) == 1:
+    phone_no_1 = phone_no[0][0]
+    phone_no_2 = ''
+elif len(phone_no) > 1:
+    phone_no_1 = phone_no[0][0]
+    phone_no_2 = phone_no[1][0]
+else:
+    phone_no_1 = ''
+    phone_no_2 = ''
+
+print("Phone 1 and phone 2 are", phone_no_1, phone_no_2)
 
 profile = {
     "first_name": getProfileDetails('first_name'),
     "last_name": getProfileDetails('last_name'),
     "email": getProfileDetails('email'),
     "dob": getProfileDetails('dob'),
-    "address": getProfileDetails('address')
+    "address": getProfileDetails('address'),
+    "phone1": phone_no_1,
+    "phone2": phone_no_2
 }
 
-def update_profile(first_name, last_name, email, dob, address):
+def update_profile(first_name, last_name, email, dob, address, phone1, phone2):
     # Update profile data
     profile["first_name"] = first_name
     updateDbTable("first_name", first_name)
@@ -66,6 +101,10 @@ def update_profile(first_name, last_name, email, dob, address):
     updateDbTable("dob", dob)
     profile["address"] = address
     updateDbTable("address", address)
+    profile["phone1"] = phone1
+    updateDbTable("phone1", phone1)
+    profile["phone2"] = phone2
+    updateDbTable("phone2", phone2)
     st.success("Profile updated successfully!")
 
 # Displaying the profile information
@@ -77,9 +116,11 @@ with st.form("profile_form"):
     email = st.text_input("Email", value=profile["email"])
     dob = st.text_input("Date of Birth", value=profile["dob"])
     address = st.text_input("Address", value=profile["address"])
+    phone1 = st.text_input("Phone 1", value=profile["phone1"])
+    phone2 = st.text_input("Phone 2", value=profile["phone2"])
     
     # Form submission button
     submit_button = st.form_submit_button(label="Update Profile")
     
     if submit_button:
-        update_profile(first_name, last_name, email, dob, address)
+        update_profile(first_name, last_name, email, dob, address, phone1, phone2)

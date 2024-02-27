@@ -5,6 +5,7 @@ import streamlit.components.v1 as components
 from datetime import datetime
 from PIL import Image
 import base64
+import uuid
 
 from helpers import connection as conn
 
@@ -47,10 +48,29 @@ def show_payment_details():
         cvv = st.text_input("CVV", max_chars=3)
         submit_button = st.form_submit_button("Pay")
 
+        # if submit_button:
+        #     st.success("Transaction was successful!")
+        #     del st.session_state['selected_product']
+        #     del st.session_state['show_payment_details']
+
         if submit_button:
-            st.success("Transaction was successful!")
-            del st.session_state['selected_product']
-            del st.session_state['show_payment_details']
+            # Generate a unique policy ID
+            policy_id = str(uuid.uuid4()).upper()
+            
+            # # Here, insert the new policy ID and other details into the policy table
+            # try:
+            #     cur.execute("INSERT INTO insurehub.policy (policy_id, product_name, ...) VALUES (%s, %s, ...)", 
+            #                 (policy_id, st.session_state['selected_product'], ...))
+            #     connection.commit()
+            #     st.success("Transaction was successful! Your policy ID is: " + policy_id)
+                
+            #     # Clean up session state after successful transaction
+            #     del st.session_state['selected_product']
+            #     del st.session_state['show_payment_details']
+            # except Exception as e:
+            #     st.error("An error occurred while processing your transaction.")
+            #     connection.rollback()
+
 
 
 image_base64 = get_image_as_base64(logo)
@@ -69,45 +89,7 @@ st.markdown(f"""
 st.title('Explore our plans!')
 
 products = getProductDetails()
-#     {"name": "Life Insurance", "description": "Provides financial protection to your loved ones in case of your untimely demise."},
-#     {"name": "Health Insurance", "description": "Covers medical expenses incurred due to illnesses and accidents."},
-#     {"name": "Car Insurance", "description": "Offers protection against financial losses due to car accidents, theft, and other damages."},
-# ]
 
-# Function to handle the "Buy" action
-# def handle_buy(product_name):
-#     st.session_state['purchased_product'] = product_name
-#     st.write(f"You have chosen to buy: {product_name}")
-
-# # Ensure there's a key in the session state to track the purchased product
-# if 'purchased_product' not in st.session_state:
-#     st.session_state['purchased_product'] = ""
-
-# # Initialize an index to keep track of the products
-# index = 0
-
-# # Loop through the products two at a time
-# while index < len(products):
-#     # Streamlit columns can be used to place cards next to each other. Adjust the number of columns if you want more or fewer cards per row.
-#     cols = st.columns(2)
-    
-#     for col in cols:
-#         if index < len(products):
-#             product = products[index]
-#             # Use markdown or HTML in the column to create the card layout
-#             col.markdown(f"""
-#                 <div style="padding:10px; margin:10px; border-radius:10px; border: 1px solid #ccc; box-shadow: 0 2px 4px rgba(0,0,0,.1);">
-#                     <h4>{product['name']}</h4>
-#                     <p>{product['description']}</p>
-#                 </div>
-#                 """, unsafe_allow_html=True)
-            
-#             # Streamlit button for the "Buy" action
-#             if col.button("Buy / Renew", key=f"buy_{index}"):
-#                 handle_buy(product['name'])
-#             index += 1
-    
-# Ensure there's a key in the session state to manage the flow
 if 'show_payment_details' not in st.session_state:
     st.session_state['show_payment_details'] = False
 
@@ -118,7 +100,6 @@ if 'selected_product' not in st.session_state:
 if st.session_state['show_payment_details']:
     show_payment_details()
 else:
-    # Your existing code to display products and handle the "Buy / Renew" button click
     index = 0
     while index < len(products):
         cols = st.columns(2)
