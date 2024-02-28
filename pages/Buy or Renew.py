@@ -6,6 +6,8 @@ from datetime import datetime
 from PIL import Image
 import base64
 import uuid
+from datetime import datetime , timedelta
+
 
 from helpers import connection as conn
 
@@ -25,16 +27,17 @@ def get_image_as_base64(path):
         return f"data:image/jpeg;base64,{data}"
     
 def getProductDetails():
-    cur.execute(f"select product_name, description from insurehub.product")
+    cur.execute(f"select product_id, product_name, description from insurehub.product")
     
     rows = cur.fetchall()
-    products_list = [{"name": row[0], "description": row[1]} for row in rows]
+    products_list = [{"id": row[0], "name": row[1], "description": row[2]} for row in rows]
     
     return products_list
 
-def handle_buy(product_name):
+def handle_buy(product_name, product_id):
     # Save the selected product name to the session state
     st.session_state['selected_product'] = product_name
+    st.session_state['selected_product_id'] = product_id
     # Redirect to the payment details page
     st.session_state['show_payment_details'] = True
 
@@ -56,20 +59,38 @@ def show_payment_details():
         if submit_button:
             # Generate a unique policy ID
             policy_id = str(uuid.uuid4()).upper()
+            payment_id = str(uuid.uuid4())
+
+
+            ### Hard coding details to be added to policy table. Must be changed later
+            start_date = datetime.now().date()
+            end_date = start_date + timedelta(days=365)
+            coverage_amt = '100000'
+            status = 'active'
+            custId = '2DECA7C8-395E-5B44-4A3B-C792143C9F45'
+            amount = 1000
+
             
-            # # Here, insert the new policy ID and other details into the policy table
-            # try:
-            #     cur.execute("INSERT INTO insurehub.policy (policy_id, product_name, ...) VALUES (%s, %s, ...)", 
-            #                 (policy_id, st.session_state['selected_product'], ...))
-            #     connection.commit()
-            #     st.success("Transaction was successful! Your policy ID is: " + policy_id)
+            #insert the new policy ID and other details into the policy table
+            try:
+                cur.execute(f"INSERT INTO insurehub.policy VALUES ('{policy_id}', '{start_date}', '{end_date}', '{coverage_amt}', '{st.session_state['selected_product_id']}', '{status}' ) ")
+                connection.commit()
+
+                cur.execute(f"INSERT INTO insurehub.purchases VALUES ( '{custId}', '{policy_id}') ")
+                connection.commit()
+
+                cur.execute(f"INSERT INTO insurehub.payment VALUES ( '{payment_id}', '{amount}', '{start_date}', 'credit card' , '{policy_id}') ")
+                connection.commit()
+
+                st.success("Transaction was successful! Your policy ID is: " + policy_id)
+                st.success("Payment Id: " + payment_id)
                 
-            #     # Clean up session state after successful transaction
-            #     del st.session_state['selected_product']
-            #     del st.session_state['show_payment_details']
-            # except Exception as e:
-            #     st.error("An error occurred while processing your transaction.")
-            #     connection.rollback()
+                # Clean up session state after successful transaction
+                del st.session_state['selected_product']
+                del st.session_state['show_payment_details']
+            except Exception as e:
+                st.error("An error occurred while processing your transaction.",)
+                connection.rollback()
 
 
 
@@ -115,5 +136,5 @@ else:
                         """, unsafe_allow_html=True)
                 
                     if col.button("Buy / Renew", key=f"buy_{index}"):
-                        handle_buy(product['name'])
+                        handle_buy(product['name'], product['id'])
                 index += 1
