@@ -43,6 +43,10 @@ def cancel_policy(policy_id):
     cancel_query = f"UPDATE insurehub.policy SET status = 'cancelled' WHERE policy_id = '{policy_id}'"
     cur.execute(cancel_query)
     connection.commit()
+    pur_query = f"delete from insurehub.purchases where policy_id = '{policy_id}'"
+    cur.execute(pur_query)
+    connection.commit()
+    
     st.success(f"Policy {policy_id} has been cancelled.")
     st.session_state.selected_policy = None 
 
