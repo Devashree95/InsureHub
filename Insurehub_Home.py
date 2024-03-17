@@ -3,13 +3,24 @@ import helpers.sidebar
 from streamlit_option_menu import option_menu
 from PIL import Image
 import base64
-
+import streamlit as st
+import yaml
+from yaml.loader import SafeLoader
 
 st.set_page_config(
 	page_title="PaperPalooza",
+    #initial_sidebar_state="collapsed",
 	page_icon="📄",
 	layout="wide"
 )
+
+st.markdown("""
+    <style>
+        section[data-testid="stSidebar"][aria-expanded="true"]{
+            display: none;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
 logo = "./images/profile_3135715.png"
 image = Image.open(logo)
@@ -22,7 +33,46 @@ def get_image_as_base64(path):
 	
 image_base64 = get_image_as_base64(logo)
 
-st.markdown(f"""
+
+
+# selected2 = option_menu(None,	 ["My Profile"], 
+#     icons=['gear'], 
+#     menu_icon="cast", default_index=0, orientation="horizontal")
+main_content = st.empty()
+
+users = {
+    "user1": "password1",
+    "user2": "password2"
+}
+
+def authenticate_user(username, password):
+    if username in users and users[username] == password:
+        return True
+    return False
+
+def show_login_page():
+    st.title("Login")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+
+    if st.button("Login"):
+        if authenticate_user(username, password):
+            st.session_state["authenticated"] = True
+            st.success("You're logged in!")
+            st.experimental_rerun()
+        else:
+            st.error("Invalid username or password")
+            
+def show_homepage():
+    st.markdown("""
+    <style>
+        section[data-testid="stSidebar"][aria-expanded="true"]{
+            display: block;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown(f"""
 			<a href="/" style="color:white;text-decoration: none;">
 				<div style="display:table;margin-top:-15 rem;margin-left:0%; display: flex;">
 			  		<img src="{image_base64}" alt="PaperPalooza Logo" style="width:50px;height:40px;margin-left:750px; flex:2;" </img>
@@ -31,13 +81,25 @@ st.markdown(f"""
 			</a>
 			<br>
 				""", unsafe_allow_html=True)
+    helpers.sidebar.show()
+    st.markdown("Welcome to InsureHub!")
+    
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+    
+# print(st.session_state["authenticated"])
 
-# selected2 = option_menu(None,	 ["My Profile"], 
-#     icons=['gear'], 
-#     menu_icon="cast", default_index=0, orientation="horizontal")
+# if st.session_state["authenticated"]:
+#     show_homepage()
+# else:
+#     show_login_page()
+if not st.session_state["authenticated"]:
+    with main_content.container():
+        # Function to show the login page
+        show_login_page()  # This function will include login form and authentication logic
+else:
+    # Clear the main content placeholder now that the user is authenticated
+    main_content.empty()
+    show_homepage()
 
-
-helpers.sidebar.show()
-
-st.markdown("Welcome to InsureHub!")
 

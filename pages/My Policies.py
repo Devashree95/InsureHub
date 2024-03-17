@@ -22,6 +22,26 @@ def get_image_as_base64(path):
     with open(path, "rb") as image_file:
         data = base64.b64encode(image_file.read()).decode()
         return f"data:image/jpeg;base64,{data}"
+
+def get_base64_of_file(path):
+    with open(path, "rb") as file:
+        return base64.b64encode(file.read()).decode()
+    
+def set_background_from_local_file(path):
+    base64_string = get_base64_of_file(path)
+    # CSS to utilize the Base64 encoded string as a background
+    css = f"""
+    <style>
+    .stApp {{
+        background-image: url("data:image/png;base64,{base64_string}");
+        background-size: cover;
+        background-position: center;
+    }}
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
+    
+set_background_from_local_file('./images/background_insurehub.png')
     
 def getPolicyDetails(custId):
     cur.execute(f"select pl.* from insurehub.policy pl join insurehub.purchases pur on pl.policy_id = pur.policy_id where cust_id = '{custId}'")
