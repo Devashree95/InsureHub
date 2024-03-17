@@ -44,7 +44,7 @@ def set_background_from_local_file(path):
     """
     st.markdown(css, unsafe_allow_html=True)
     
-set_background_from_local_file('./images/background_insurehub.png')
+set_background_from_local_file('./images/login_background.png')
     
     
 image_base64 = get_image_as_base64(logo)

@@ -14,6 +14,17 @@ st.set_page_config(
 	layout="wide"
 )
 
+col3, col1, col2 = st.columns([1,2, 1])
+
+logo1 = "./images/logo.png"
+image = Image.open(logo1)
+
+# Function to convert image to Base64
+def get_image_as_base64(path):
+    with open(path, "rb") as image_file:
+        data = base64.b64encode(image_file.read()).decode()
+        return f"data:image/jpeg;base64,{data}"
+
 st.markdown("""
     <style>
         section[data-testid="stSidebar"][aria-expanded="true"]{
@@ -24,17 +35,30 @@ st.markdown("""
 
 logo = "./images/profile_3135715.png"
 image = Image.open(logo)
-
-# Function to convert image to Base64
-def get_image_as_base64(path):
-    with open(path, "rb") as image_file:
-        data = base64.b64encode(image_file.read()).decode()
-        return f"data:image/jpeg;base64,{data}"
 	
 image_base64 = get_image_as_base64(logo)
 
 
-
+def get_base64_of_file(path):
+    with open(path, "rb") as file:
+        return base64.b64encode(file.read()).decode()
+    
+def set_background_from_local_file(path):
+    base64_string = get_base64_of_file(path)
+    # CSS to utilize the Base64 encoded string as a background
+    css = f"""
+    <style>
+    .stApp {{
+        background-image: url("data:image/png;base64,{base64_string}");
+        background-size: cover;
+        background-position: center;
+    }}
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
+    
+set_background_from_local_file('./images/login_background.png')
+    
 # selected2 = option_menu(None,	 ["My Profile"], 
 #     icons=['gear'], 
 #     menu_icon="cast", default_index=0, orientation="horizontal")
@@ -51,17 +75,28 @@ def authenticate_user(username, password):
     return False
 
 def show_login_page():
-    st.title("Login")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-
-    if st.button("Login"):
-        if authenticate_user(username, password):
-            st.session_state["authenticated"] = True
-            st.success("You're logged in!")
-            st.experimental_rerun()
-        else:
-            st.error("Invalid username or password")
+    with col2:
+          image_base64 = get_image_as_base64(logo1)
+          st.markdown(f"""
+				<a href="/" style="color:white;text-decoration: none;">
+					<div style="display:table;margin-top:-15 rem;margin-left:0%; display: flex;">
+						<img src="{image_base64}" alt="Insurehub Logo" style="width:100px;height:100px;" </img>
+					</div>
+				</a>
+				<br>
+					""", unsafe_allow_html=True)
+    with col1:
+          st.title("Welcome to Insurehub!")
+          st.subheader("Login")
+          username = st.text_input("Username")
+          password = st.text_input("Password", type="password")
+          if st.button("Login"):
+            if authenticate_user(username, password):
+                st.session_state["authenticated"] = True
+				#st.success("You're logged in!")
+                st.experimental_rerun()
+            else:
+                st.error("Invalid username or password")
             
 def show_homepage():
     st.markdown("""
@@ -87,12 +122,7 @@ def show_homepage():
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
     
-# print(st.session_state["authenticated"])
 
-# if st.session_state["authenticated"]:
-#     show_homepage()
-# else:
-#     show_login_page()
 if not st.session_state["authenticated"]:
     with main_content.container():
         # Function to show the login page

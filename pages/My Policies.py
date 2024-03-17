@@ -41,7 +41,7 @@ def set_background_from_local_file(path):
     """
     st.markdown(css, unsafe_allow_html=True)
     
-set_background_from_local_file('./images/background_insurehub.png')
+set_background_from_local_file('./images/login_background.png')
     
 def getPolicyDetails(custId):
     cur.execute(f"select pl.* from insurehub.policy pl join insurehub.purchases pur on pl.policy_id = pur.policy_id where cust_id = '{custId}'")
