@@ -84,10 +84,10 @@ def update_goal(goal_id, new_rev, new_date):
     connection.commit()
 
 
-st.title("My Goals")
+st.title("My Goals 🎯")
 
 
-st.title("Add a new goal:")
+st.subheader("Add a new goal:")
 # Add New Goal form
 with st.form("add_goal"):
     rev = st.text_input("Target Revenue")
@@ -100,7 +100,7 @@ with st.form("add_goal"):
         st.success("Goal added successfully!")
         st.experimental_rerun()
         
-st.title("Manage Existing Goals")
+st.subheader("Manage Existing Goals")
 
 goals = fetch_goals()  # Fetch existing goals
 if goals:

@@ -8,7 +8,7 @@ import yaml
 from yaml.loader import SafeLoader
 
 st.set_page_config(
-	page_title="PaperPalooza",
+	page_title="InsureHub",
     #initial_sidebar_state="collapsed",
 	page_icon="📄",
 	layout="wide"
@@ -110,7 +110,7 @@ def show_homepage():
     st.markdown(f"""
 			<a href="/" style="color:white;text-decoration: none;">
 				<div style="display:table;margin-top:-15 rem;margin-left:0%; display: flex;">
-			  		<img src="{image_base64}" alt="PaperPalooza Logo" style="width:50px;height:40px;margin-left:750px; flex:2;" </img>
+			  		<img src="{image_base64}" alt="Insurehub Logo" style="width:50px;height:40px;margin-left:750px; flex:2;" </img>
 					<span style="padding:10px; flex:2;">Username</span>
 				</div>
 			</a>

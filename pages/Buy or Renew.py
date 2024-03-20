@@ -7,6 +7,7 @@ from PIL import Image
 import base64
 import uuid
 from datetime import datetime , timedelta
+import json
 
 
 from helpers import connection as conn
@@ -59,22 +60,56 @@ def handle_buy(product_name, product_id):
     st.session_state['selected_product'] = product_name
     st.session_state['selected_product_id'] = product_id
     # Redirect to the payment details page
-    st.session_state['show_payment_details'] = True
+    #st.session_state['show_payment_details'] = True
+    st.session_state['show_policy_details'] = True 
+
+def show_policy_details():
+    st.header(f"Coverage Details for: {st.session_state['selected_product']}")
+    cur.execute(f"select coverage_desc from insurehub.product where product_id = '{st.session_state['selected_product_id']}'")
+    
+    row = cur.fetchall()
+    if row:
+        print(row)
+        # Parse the JSON string into a Python list
+        tuple = row[0]
+        coverage_items = tuple[0]
+        st.markdown("### Coverage Includes:")
+        for item in coverage_items:
+            st.markdown(f"""
+                <div style="border: 1px solid #ccc; margin: 10px 0; padding: 10px; border-radius: 5px; background-color: rgba(128, 128, 128, 0.5);">
+                 🚀 {item}
+                </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.write("No details available for this product.")
+
+    st.subheader("Rates tailored for you:")
+    cur.execute(f"select rate_amount from insurehub.product where product_id = '{st.session_state['selected_product_id']}'")
+    
+    row = cur.fetchall()
+    st.markdown(f"### $ {row[0][0]}")
+
+
+    if st.button("Back to Explore plans"):
+        st.session_state['show_policy_details'] = False
+        return 
+
+    
+    # Continue button to proceed to payment
+    if st.button("Continue to Payment"):
+        st.session_state['show_payment_details'] = True
+        st.session_state['show_policy_details'] = False  # Hide policy details
 
 # Function to display payment details form and handle the transaction
 def show_payment_details():
     st.write(f"You have chosen to buy: {st.session_state['selected_product']}")
+    
     with st.form("payment_form", clear_on_submit=True):
         name_on_card = st.text_input("Name on Card")
         card_number = st.text_input("Card Number", max_chars=16)
         expiration_date = st.date_input("Expiration Date")
         cvv = st.text_input("CVV", max_chars=3)
         submit_button = st.form_submit_button("Pay")
-
-        # if submit_button:
-        #     st.success("Transaction was successful!")
-        #     del st.session_state['selected_product']
-        #     del st.session_state['show_payment_details']
 
         if submit_button:
             # Generate a unique policy ID
@@ -112,6 +147,10 @@ def show_payment_details():
                 st.error("An error occurred while processing your transaction.",)
                 connection.rollback()
 
+    if st.button("Back to Policy Details"):
+        st.session_state['show_payment_details'] = False
+        st.session_state['show_policy_details'] = True
+        return 
 
 
 image_base64 = get_image_as_base64(logo)
@@ -126,10 +165,13 @@ st.markdown(f"""
 			<br>
 				""", unsafe_allow_html=True)
 
-
-st.title('Explore our plans!')
+if 'show_policy_details' not in st.session_state and 'show_payment_details' not in st.session_state:
+    st.title('Explore our plans! ☂️')
 
 products = getProductDetails()
+
+if 'show_policy_details' not in st.session_state:
+    st.session_state['show_policy_details'] = False
 
 if 'show_payment_details' not in st.session_state:
     st.session_state['show_payment_details'] = False
@@ -138,7 +180,11 @@ if 'selected_product' not in st.session_state:
     st.session_state['selected_product'] = ""
 
 # Check if payment details should be shown
-if st.session_state['show_payment_details']:
+# if st.session_state['show_payment_details']:
+#     show_payment_details()
+if st.session_state['show_policy_details']:
+    show_policy_details()
+elif st.session_state['show_payment_details']:
     show_payment_details()
 else:
     index = 0
