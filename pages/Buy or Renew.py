@@ -74,7 +74,6 @@ if st.session_state.user_logged_in:
         
         row = cur.fetchall()
         if row:
-            print(row)
             # Parse the JSON string into a Python list
             tuple = row[0]
             coverage_items = tuple[0]
@@ -173,7 +172,7 @@ if st.session_state.user_logged_in:
     if 'show_policy_details' not in st.session_state and 'show_payment_details' not in st.session_state:
         st.title('Explore our plans! ☂️')
 
-        products = getProductDetails()
+    products = getProductDetails()
 
     if 'show_policy_details' not in st.session_state:
         st.session_state['show_policy_details'] = False

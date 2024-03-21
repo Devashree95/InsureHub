@@ -79,6 +79,7 @@ def login_snippet(key="login"):
                     st.error(f"Error: {e}")
                     print(f"Error: {e}")
                     st.stop()
+
         
 #             # Create new account button
 #             create_account_button = st.button("Create new account")
