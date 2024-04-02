@@ -15,16 +15,16 @@ image_base64 = get_image_as_base64(logo)
 
 def show() -> None:
 	with st.sidebar:
-		st.markdown(f"""
-			<a href="/" style="color:white;text-decoration: none;">
-				<div style="display:table;margin-top:-13rem;margin-left:0%;">
-			  		<img src="{image_base64}" alt="Insurehub Logo" style="width:50px;height:50px;margin-left:10px;" </img>
-					<span>InsureHub</span>
-					<span style="font-size: 0.8em; color: grey">&nbsp;&nbsp;v0.1.0</span>
-				</div>
-			</a>
-			<br>
-				""", unsafe_allow_html=True)
+		# st.markdown(f"""
+		# 	<a href="/" style="color:white;text-decoration: none;">
+		# 		<div style="display:table;margin-top:-13rem;margin-left:0%;">
+		# 	  		<img src="{image_base64}" alt="Insurehub Logo" style="width:50px;height:50px;margin-left:10px;" </img>
+		# 			<span>InsureHub</span>
+		# 			<span style="font-size: 0.8em; color: grey">&nbsp;&nbsp;v0.1.0</span>
+		# 		</div>
+		# 	</a>
+		# 	<br>
+		# 		""", unsafe_allow_html=True)
 		
 
 		reload_button = st.button("↪︎  Reload Page")

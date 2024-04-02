@@ -35,6 +35,7 @@ def login_snippet(key="login"):
                     st.stop()
 
                 # If submit, fetch password from the database
+                print(email)
                 cur.execute("SELECT password FROM insurehub.users WHERE username = %s", (email,))
                 password = cur.fetchone()
 
