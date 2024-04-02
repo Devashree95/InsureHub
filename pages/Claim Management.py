@@ -237,5 +237,8 @@ else:
 
 if 'selected_claim' not in st.session_state or st.session_state['selected_claim'] is None:
     if 'file_claim' not in st.session_state or not st.session_state['file_claim']:
+        st.header('Want to file a new claim?')
+        st.write('Please fill out the following form to file new claim.')
+        st.write('Make sure to have supporting documents ready.')
         if st.button('File a New Claim'):
             st.session_state['file_claim'] = True
