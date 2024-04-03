@@ -39,6 +39,8 @@ def login_snippet(key="login"):
 
             if submit:
                 st.session_state['username'] = email
+                cur.execute("SELECT role FROM insurehub.users_test WHERE username = %s", (email,))
+                st.session_state['role'] = cur.fetchone()[0]
                 # If submit, check if the email exists in the database
                 cur.execute("SELECT EXISTS (SELECT 1 FROM insurehub.users_test WHERE username = %s)", (email,))
                 email_exists = cur.fetchone()

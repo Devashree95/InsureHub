@@ -104,6 +104,87 @@ def show_claim_details(claim_id):
     else:
         st.error("Policy details could not be found.")
 
+def approve_claim(claim_id):
+    query = f"""
+        update insurehub.claim set status = 'settled' where claim_id = '{claim_id}';
+        """
+    cur.execute(query)
+    connection.commit()
+
+    updated_at = datetime.now().date()
+    query = f"""
+        update insurehub.claim set claim_sett_dt = '{updated_at}' where claim_id = '{claim_id}';
+        """
+    cur.execute(query)
+    connection.commit()
+
+def reject_claim(claim_id):
+    query = f"""
+        update insurehub.claim set status = 'cancelled' where claim_id = '{claim_id}';
+        """
+    cur.execute(query)
+    connection.commit()
+
+    query = f"""
+        update insurehub.claim set claim_sett_dt = NULL where claim_id = '{claim_id}';
+        """
+    cur.execute(query)
+    connection.commit()
+
+def agent_show_claim_details(claim_id):
+    count = 0
+    details, columns = getSingleClaimDetails(claim_id)
+    if details:
+        st.write(f"Details for Claim ID: {claim_id}")
+        for col, val in zip(columns, details):
+            #st.text(f"{col}: {val}")
+            st.markdown(f"""
+                <div style="border: 1px solid #ccc; margin: 10px 0; padding: 10px; border-radius: 5px; background-color: rgba(128, 128, 128, 0.1);">
+                 	🔶 {col} : {val}
+                </div>
+            """, unsafe_allow_html=True)
+
+        st.write("### Files")
+        files = get_files_for_claim(claim_id)
+        if files:
+            for file_id, file_name in files:
+                file_name, file_data = serve_file(file_id)
+                if file_data:
+                    col1, col2 = st.columns([3, 1])
+                    file_container = f"""
+                <div style="border: 2px solid #4CAF50; margin: 10px 0; padding: 10px; border-radius: 5px; background-color: rgba(76, 175, 80, 0.1);">
+                    <span style="font-size: 16px; font-weight: bold;">{file_name}</span><br>
+                </div>
+                """
+                    with col1:
+                        st.markdown(file_container, unsafe_allow_html=True)
+                    with col2:
+                        st.write('')
+                        st.download_button(label=f"Download {file_name}",
+                                   data=file_data,
+                                   file_name=file_name,
+                                   mime="application/octet-stream",  
+                                   key=file_id)
+        else:
+            st.write("No files available for this claim.")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button('Approve Claim', key=f'approve_{claim_id}'):
+                approve_claim(claim_id)
+                st.success('Claim Approved')
+                # Optionally, rerun to refresh the data
+                st.experimental_rerun()
+
+        with col2:
+            if st.button('Reject Claim', key=f'reject_{claim_id}'):
+                reject_claim(claim_id) 
+                st.error('Claim Rejected')
+                # Optionally, rerun to refresh the data
+                st.experimental_rerun()
+    else:
+        st.error("Policy details could not be found.")
+
+
 def insert_new_claim(policy_id, claim_amount, date_filed, supporting_files):
     try:
         # Convert the date_filed to the appropriate format if needed, e.g., date_filed.strftime('%Y-%m-%d')
@@ -181,6 +262,18 @@ def serve_file(file_id):
         return file_name, BytesIO(file_data)
     return None, None
 
+def getStatus(claim_id):
+    query = f"SELECT status FROM insurehub.claim WHERE claim_id = '{claim_id}'"
+    cur.execute(query)
+    status = cur.fetchall()
+    return status[0][0]
+
+def getDate(claim_id):
+    query = f"SELECT claim_sett_dt FROM insurehub.claim WHERE claim_id = '{claim_id}'"
+    cur.execute(query)
+    end_date = cur.fetchall()
+    return end_date[0][0]
+
 	
 image_base64 = get_image_as_base64(logo)
 
@@ -194,51 +287,92 @@ st.markdown(f"""
 			<br>
 				""", unsafe_allow_html=True)
 
+if st.session_state['role'] == 'customer':
+    st.title('My Claims:')
 
-st.title('My Claims:')
+    # st.write('Here are your policies:')
 
-# st.write('Here are your policies:')
-
-policy_id = '7DB4D960-8AB5-7876-3B35-3465E625672D'
+    policy_id = '7DB4D960-8AB5-7876-3B35-3465E625672D'
 
 
-if 'selected_claim' not in st.session_state:
-    st.session_state.selected_claim = None
+    if 'selected_claim' not in st.session_state:
+        st.session_state.selected_claim = None
 
-if 'file_claim' in st.session_state and st.session_state['file_claim']:
-    file_claim_form()
-else:
-    if st.session_state['selected_claim']:
-        show_claim_details(st.session_state.selected_claim)
-        
-        if st.button("Back to Claims List", key=f"back_to_list_{st.session_state['selected_claim']}"):
-            st.session_state.selected_claim = None
-            st.experimental_rerun()
+    if 'file_claim' in st.session_state and st.session_state['file_claim']:
+        file_claim_form()
     else:
-        with st.container():
-            rows, columns = getClaimDetails(policy_id)
-            df = pd.DataFrame(rows, columns=columns)
-            columns = ['claim_id', 'claim_amount', 'status', 'date_filed', 'claim_sett_dt', 'policy_id']
-            df = df[columns]
-            df = df.rename(columns={'claim_id': 'CLAIM ID', 'claim_amount': 'CLAIM AMOUNT', 'status': 'STATUS', 'date_filed': 'DATE FILED', 'claim_sett_dt': 'CLAIM SETTLEMENT DATE' ,'policy_id': 'POLICY ID' })
+        if st.session_state['selected_claim']:
+            show_claim_details(st.session_state.selected_claim)
             
-            # Display policies with buttons to select for more details
-            for claim_id in df['CLAIM ID']:
-                #st.write(f"Policy ID: {policy_id}")
-                st.markdown(f"""
-                    <div style="border: 1px solid #ccc; margin: 10px 0; padding: 10px; border-radius: 5px; background-color: rgba(128, 128, 128, 0.1);">
-                        💠 Claim ID: {claim_id} <br>
-                        🔸 Status : {df['STATUS'].iloc[0]} <br>
-                        🔸 Settled On: {df['CLAIM SETTLEMENT DATE'].iloc[0]}
-                    </div>
-                """, unsafe_allow_html=True)
+            if st.button("Back to Claims List", key=f"back_to_list_{st.session_state['selected_claim']}"):
+                st.session_state.selected_claim = None
+                st.experimental_rerun()
+        else:
+            with st.container():
+                rows, columns = getClaimDetails(policy_id)
+                df = pd.DataFrame(rows, columns=columns)
+                columns = ['claim_id', 'claim_amount', 'status', 'date_filed', 'claim_sett_dt', 'policy_id']
+                df = df[columns]
+                df = df.rename(columns={'claim_id': 'CLAIM ID', 'claim_amount': 'CLAIM AMOUNT', 'status': 'STATUS', 'date_filed': 'DATE FILED', 'claim_sett_dt': 'CLAIM SETTLEMENT DATE' ,'policy_id': 'POLICY ID' })
+                
+                # Display policies with buttons to select for more details
+                for claim_id in df['CLAIM ID']:
+                    #st.write(f"Policy ID: {policy_id}")
+                    st.markdown(f"""
+                        <div style="border: 1px solid #ccc; margin: 10px 0; padding: 10px; border-radius: 5px; background-color: rgba(128, 128, 128, 0.1);">
+                            💠 Claim ID: {claim_id} <br>
+                            🔸 Status : {df['STATUS'].iloc[0]} <br>
+                            🔸 Settled On: {df['CLAIM SETTLEMENT DATE'].iloc[0]}
+                        </div>
+                    """, unsafe_allow_html=True)
 
-                st.button(f"View Details", key=claim_id, on_click=select_claim, args=(claim_id,))
+                    st.button(f"View Details", key=claim_id, on_click=select_claim, args=(claim_id,))
 
-if 'selected_claim' not in st.session_state or st.session_state['selected_claim'] is None:
-    if 'file_claim' not in st.session_state or not st.session_state['file_claim']:
-        st.header('Want to file a new claim?')
-        st.write('Please fill out the following form to file new claim.')
-        st.write('Make sure to have supporting documents ready.')
-        if st.button('File a New Claim'):
-            st.session_state['file_claim'] = True
+    if 'selected_claim' not in st.session_state or st.session_state['selected_claim'] is None:
+        if 'file_claim' not in st.session_state or not st.session_state['file_claim']:
+            st.header('Want to file a new claim?')
+            st.write('Please fill out the following form to file new claim.')
+            st.write('Make sure to have supporting documents ready.')
+            if st.button('File a New Claim'):
+                st.session_state['file_claim'] = True
+
+else:
+    st.header("Manage Claims")
+
+    # st.write('Here are your policies:')
+
+    policy_id = '7DB4D960-8AB5-7876-3B35-3465E625672D'
+
+
+    if 'selected_claim' not in st.session_state:
+        st.session_state.selected_claim = None
+
+    if 'file_claim' in st.session_state and st.session_state['file_claim']:
+        file_claim_form()
+    else:
+        if st.session_state['selected_claim']:
+            agent_show_claim_details(st.session_state.selected_claim)
+            
+            if st.button("Back to Claims List", key=f"back_to_list_{st.session_state['selected_claim']}"):
+                st.session_state.selected_claim = None
+                st.experimental_rerun()
+        else:
+            with st.container():
+                rows, columns = getClaimDetails(policy_id)
+                df = pd.DataFrame(rows, columns=columns)
+                columns = ['claim_id', 'claim_amount', 'status', 'date_filed', 'claim_sett_dt', 'policy_id']
+                df = df[columns]
+                df = df.rename(columns={'claim_id': 'CLAIM ID', 'claim_amount': 'CLAIM AMOUNT', 'status': 'STATUS', 'date_filed': 'DATE FILED', 'claim_sett_dt': 'CLAIM SETTLEMENT DATE' ,'policy_id': 'POLICY ID' })
+                
+                # Display policies with buttons to select for more details
+                for claim_id in df['CLAIM ID']:
+                    #st.write(f"Policy ID: {policy_id}")
+                    st.markdown(f"""
+                        <div style="border: 1px solid #ccc; margin: 10px 0; padding: 10px; border-radius: 5px; background-color: rgba(128, 128, 128, 0.1);">
+                            💠 Claim ID: {claim_id} <br>
+                            🔸 Status : {getStatus(claim_id)} <br>
+                            🔸 Settled On: {getDate(claim_id)}
+                        </div>
+                    """, unsafe_allow_html=True)
+
+                    st.button(f"View Details", key=claim_id, on_click=select_claim, args=(claim_id,))
