@@ -2,6 +2,7 @@ import streamlit as st
 import helpers.sidebar
 from PIL import Image
 import base64
+from st_pages import Page, show_pages
 
 from helpers.Insurehub_Login import login_snippet
 
@@ -11,6 +12,7 @@ st.set_page_config(
 	page_icon="📄",
     layout="wide"
 )
+
 
 col3, col1, col2 = st.columns([1,2, 1])
 
@@ -82,7 +84,7 @@ if st.session_state.user_logged_in:
                 <a href="/" style="color:white;text-decoration: none;">
                     <div style="display:table;margin-top:-15 rem;margin-left:0%; display: flex;">
                         <img src="{image_base64}" alt="PaperPalooza Logo" style="width:50px;height:40px;margin-left:750px; flex:2;" </img>
-                        <span style="padding:10px; flex:2;">Username</span>
+                        <span style="padding:10px; flex:2;">{st.session_state['username']}</span>
                     </div>
                 </a>
                 <br>

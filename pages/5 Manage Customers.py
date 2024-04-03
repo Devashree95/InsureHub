@@ -7,8 +7,6 @@ import uuid
 from helpers import connection as conn
 from helpers.Insurehub_Login import login_snippet
 
-
-
 if "user_logged_in" not in st.session_state or not st.session_state.user_logged_in:
     st.toast("You need to login to access this page.")
     user_logged_in = login_snippet(key="buy_or_renew_login")
@@ -57,7 +55,7 @@ if st.session_state.user_logged_in:
                 <a href="/" style="color:white;text-decoration: none;">
                     <div style="display:table;margin-top:-15 rem;margin-left:0%; display: flex;">
                         <img src="{image_base64}" alt="Insurehub Logo" style="width:50px;height:40px;margin-left:750px; flex:2;" </img>
-                        <span style="padding:10px; flex:2;">Username</span>
+                        <span style="padding:10px; flex:2;">{st.session_state['username']}</span>
                     </div>
                 </a>
                 <br>
@@ -82,36 +80,38 @@ if st.session_state.user_logged_in:
         cur.execute(query)
         connection.commit()
 
+    if st.session_state['role'] == 'agent':
+        st.title("Customer Management")
 
-    st.title("Customer Management")
+        # Add customer form
+        with st.form("add_customer"):
+            st.write("Add a new customer")
+            fname = st.text_input("First Name")
+            lname = st.text_input("Last Name")
+            email = st.text_input("Email")
+            dob = st.date_input("Date of Birth")
+            address = st.text_input("Address")
 
-    # Add customer form
-    with st.form("add_customer"):
-        st.write("Add a new customer")
-        fname = st.text_input("First Name")
-        lname = st.text_input("Last Name")
-        email = st.text_input("Email")
-        dob = st.date_input("Date of Birth")
-        address = st.text_input("Address")
+            submit_button = st.form_submit_button("Add Customer")
 
-        submit_button = st.form_submit_button("Add Customer")
-
-        if submit_button:
-            add_customer(fname, lname, email, dob, address)
-            st.success("Customer added successfully!")
-            st.experimental_rerun()
-
-    # Display existing customers
-    st.title("Existing Accounts:")
-
-    customers = fetch_customers()
-    for customer in customers:
-        with st.expander(f"Customer :  {customer[1]} {customer[2]}"):
-            st.write(f"Id: {customer[0]}") 
-            st.write(f"Email: {customer[3]}")  
-            st.write(f"Date of Birth: {customer[4]}") 
-            st.write(f"Address: {customer[5]}") 
-
-            if st.button("Remove Account", key=f"delete_{customer[0]}"):
-                delete_customer(customer[0])
+            if submit_button:
+                add_customer(fname, lname, email, dob, address)
+                st.success("Customer added successfully!")
                 st.experimental_rerun()
+
+        # Display existing customers
+        st.title("Existing Accounts:")
+
+        customers = fetch_customers()
+        for customer in customers:
+            with st.expander(f"Customer :  {customer[1]} {customer[2]}"):
+                st.write(f"Id: {customer[0]}") 
+                st.write(f"Email: {customer[3]}")  
+                st.write(f"Date of Birth: {customer[4]}") 
+                st.write(f"Address: {customer[5]}") 
+
+                if st.button("Remove Account", key=f"delete_{customer[0]}"):
+                    delete_customer(customer[0])
+                    st.experimental_rerun()
+    else:
+        st.warning("You don't have access to this page.")

@@ -55,7 +55,7 @@ if st.session_state.user_logged_in:
                 <a href="/" style="color:white;text-decoration: none;">
                     <div style="display:table;margin-top:-15 rem;margin-left:0%; display: flex;">
                         <img src="{image_base64}" alt="Insurehub Logo" style="width:50px;height:40px;margin-left:750px; flex:2;" </img>
-                        <span style="padding:10px; flex:2;">Username</span>
+                        <span style="padding:10px; flex:2;">{st.session_state['username']}</span>
                     </div>
                 </a>
                 <br>
@@ -86,49 +86,52 @@ if st.session_state.user_logged_in:
         connection.commit()
 
 
-    st.title("My Goals 🎯")
+    if st.session_state['role'] == 'agent':
+        st.title("My Goals 🎯")
 
 
-    st.subheader("Add a new goal:")
-    # Add New Goal form
-    with st.form("add_goal"):
-        rev = st.text_input("Target Revenue")
-        date = st.date_input("Target Date")
+        st.subheader("Add a new goal:")
+        # Add New Goal form
+        with st.form("add_goal"):
+            rev = st.text_input("Target Revenue")
+            date = st.date_input("Target Date")
 
-        submit_button = st.form_submit_button("Add Goal")
+            submit_button = st.form_submit_button("Add Goal")
 
-        if submit_button:
-            add_goal(rev, date)
-            st.success("Goal added successfully!")
-            st.experimental_rerun()
+            if submit_button:
+                add_goal(rev, date)
+                st.success("Goal added successfully!")
+                st.experimental_rerun()
+                
+        st.subheader("Manage Existing Goals")
+
+        goals = fetch_goals()  # Fetch existing goals
+        if goals:
+            goal_options = {f"Goal Id: {goal[0]} - Target Revenue: {goal[1]} - Target Date: {goal[2]} - Status: {goal[3]}": goal[0] for goal in goals}
+            selected_goal_id = st.selectbox("Select a Goal to Manage", options=list(goal_options.keys()), format_func=lambda x: goal_options[x])
+            print(selected_goal_id)
+            with st.form("goal_management"):
+                # Fields for updating a goal
+                new_rev = st.text_input("Target Revenue", key="new_rev", value = selected_goal_id.split(" ")[6])
+                new_date = st.text_input("Target Date", key="new_date", value = selected_goal_id.split(" ")[10])
+                st.write(f"Status:  {selected_goal_id.split(' ')[13]}")
+                
+                # Action buttons
+                update_button = st.form_submit_button("Update Goal")
+                delete_button = st.form_submit_button("Delete Goal")
             
-    st.subheader("Manage Existing Goals")
-
-    goals = fetch_goals()  # Fetch existing goals
-    if goals:
-        goal_options = {f"Goal Id: {goal[0]} - Target Revenue: {goal[1]} - Target Date: {goal[2]} - Status: {goal[3]}": goal[0] for goal in goals}
-        selected_goal_id = st.selectbox("Select a Goal to Manage", options=list(goal_options.keys()), format_func=lambda x: goal_options[x])
-        print(selected_goal_id)
-        with st.form("goal_management"):
-            # Fields for updating a goal
-            new_rev = st.text_input("Target Revenue", key="new_rev", value = selected_goal_id.split(" ")[6])
-            new_date = st.text_input("Target Date", key="new_date", value = selected_goal_id.split(" ")[10])
-            st.write(f"Status:  {selected_goal_id.split(' ')[13]}")
+            if update_button:
+                # Update goal logic
+                update_goal(selected_goal_id.split(" ")[2], new_rev, new_date)
+                st.success("Goal updated successfully!")
+                st.experimental_rerun()
             
-            # Action buttons
-            update_button = st.form_submit_button("Update Goal")
-            delete_button = st.form_submit_button("Delete Goal")
-        
-        if update_button:
-            # Update goal logic
-            update_goal(selected_goal_id.split(" ")[2], new_rev, new_date)
-            st.success("Goal updated successfully!")
-            st.experimental_rerun()
-        
-        if delete_button:
-            # Delete goal logic
-            delete_goal(selected_goal_id.split(" ")[2])
-            st.success("Goal deleted successfully!")
-            st.experimental_rerun()
+            if delete_button:
+                # Delete goal logic
+                delete_goal(selected_goal_id.split(" ")[2])
+                st.success("Goal deleted successfully!")
+                st.experimental_rerun()
+        else:
+            st.write("No goals available to manage.")
     else:
-        st.write("No goals available to manage.")
+        st.warning("You don't have access to this page.")
