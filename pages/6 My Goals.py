@@ -75,7 +75,7 @@ if st.session_state.user_logged_in:
         cur.execute(query)
         connection.commit()
 
-    def add_goal(rev, date):
+    def add_goal(new_goal_id, rev, date, agent_id):
         query = f"INSERT INTO insurehub.goal VALUES ('{new_goal_id}', '{rev}', '{date}', 'Created', '{agent_id}' )"
         cur.execute(query)
         connection.commit()
@@ -115,29 +115,25 @@ if st.session_state.user_logged_in:
             for goal in goals:
                 st.write(f"- {goal[1]}")  # Display goal name
             selected_goal_name = st.selectbox("Select a Goal to Manage", options=[goal[1] for goal in goals])
-            selected_goal = [goal for goal in goals if goal[1] == selected_goal_name][0]
-        
+            selected_goal = next(goal for goal in goals if goal[1] == selected_goal_name)
+
             with st.form("goal_management"):
-                new_rev = st.text_input("Target Revenue", value=selected_goal[2])
-                new_date = st.date_input("Target Date", value=selected_goal[3])
+                new_rev = st.text_input("Target Revenue", value=str(selected_goal[1]))
+                new_date = st.date_input("Target Date", value=selected_goal[2])
                 new_status = st.selectbox("New Status", options=["In Progress", "Completed"], index=0 if selected_goal[4] == "In Progress" else 1)
-                st.write(f"Status: {selected_goal[4]}")
                 
-                
-                update_button = st.form_submit_button("🖋️Update Goal")
-                delete_button = st.form_submit_button("🗑️Delete Goal")
-                    
-                
-            
-            if update_button:
-                update_goal(selected_goal_name, new_rev, new_date, new_status)
-                st.success("Goal updated successfully!🎉")
-                st.rerun()
-                    
-            if delete_button:
+                submit_button = st.form_submit_button("🖋️ Update Goal")
+                if submit_button:
+                    update_goal(selected_goal_name, new_rev, new_date, new_status)
+                    st.success("Goal updated successfully! 🎉")
+                    st.experimental_rerun()
+
+        # Place the Delete button in a separate container to ensure it's not mistaken for a form submission action
+        if goals and 'selected_goal_name' in locals():
+            if st.button("🗑️ Delete Goal"):
                 delete_goal(selected_goal_name)
-                st.success("Goal deleted successfully!✔️")
-                st.rerun()
+                st.success("Goal deleted successfully! ✔️")
+                st.experimental_rerun()
         else:
             st.write("No goals available to manage.")
  
