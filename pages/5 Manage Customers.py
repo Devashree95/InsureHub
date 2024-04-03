@@ -81,7 +81,7 @@ if st.session_state.user_logged_in:
         connection.commit()
 
     if st.session_state['role'] == 'agent':
-        st.title("Customer Management")
+        st.title("🖋️Customer Management")
 
         # Add customer form
         with st.form("add_customer"):
@@ -92,7 +92,7 @@ if st.session_state.user_logged_in:
             dob = st.date_input("Date of Birth")
             address = st.text_input("Address")
 
-            submit_button = st.form_submit_button("Add Customer")
+            submit_button = st.form_submit_button("➕Add Customer")
 
             if submit_button:
                 add_customer(fname, lname, email, dob, address)
@@ -100,17 +100,17 @@ if st.session_state.user_logged_in:
                 st.experimental_rerun()
 
         # Display existing customers
-        st.title("Existing Accounts:")
+        st.title("📒Existing Accounts:")
 
         customers = fetch_customers()
         for customer in customers:
-            with st.expander(f"Customer :  {customer[1]} {customer[2]}"):
-                st.write(f"Id: {customer[0]}") 
-                st.write(f"Email: {customer[3]}")  
-                st.write(f"Date of Birth: {customer[4]}") 
-                st.write(f"Address: {customer[5]}") 
+            with st.expander(f"👨‍💼Customer :  {customer[1]} {customer[2]}"):
+                st.write(f"🔹Id: {customer[0]}") 
+                st.write(f"🔹Email: {customer[3]}")  
+                st.write(f"🔹Date of Birth: {customer[4]}") 
+                st.write(f"🔹Address: {customer[5]}") 
 
-                if st.button("Remove Account", key=f"delete_{customer[0]}"):
+                if st.button("🗑️Remove Account", key=f"delete_{customer[0]}"):
                     delete_customer(customer[0])
                     st.experimental_rerun()
     else:
