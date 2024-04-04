@@ -20,6 +20,11 @@ cur = connection.cursor()
 logo = "./images/profile_3135715.png"
 image = Image.open(logo)
 
+# if 'role' not in st.session_state:
+#     st.session_state['role'] = "agent"
+
+print(st.session_state['role'])
+
 # Function to convert image to Base64
 def get_image_as_base64(path):
     with open(path, "rb") as image_file:
@@ -238,6 +243,9 @@ def file_claim_form():
         supporting_files = st.file_uploader("Upload Supporting Files", accept_multiple_files=True)
         
         submit_button = st.form_submit_button("Submit Claim")
+
+        if submit_button:
+            insert_new_claim(policy_id,claim_amount,date_filed,supporting_files)
         
     if not submit_button:
         if st.button("Back"):
