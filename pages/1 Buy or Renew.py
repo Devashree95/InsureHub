@@ -104,6 +104,26 @@ if st.session_state.user_logged_in:
             st.session_state['show_payment_details'] = True
             st.session_state['show_policy_details'] = False  # Hide policy details
 
+
+    # Define a function to add new products
+    def add_product(product_name, description, coverage_desc):
+        try:
+            admin_id='3457D733-E929-4BB1-9B82-B07A06BE76F3'
+            product_id = str(uuid.uuid4())
+            # Split the coverage description into lines and store each line in a list
+            coverage_lines = coverage_desc.split('\n')
+        
+            # Convert the list of lines into a PostgreSQL array string
+            coverage_array_str = "{" + ",".join([f"'{line.strip()}'" for line in coverage_lines]) + "}"
+        
+            cur.execute("INSERT INTO insurehub.product (product_id, product_name, description, admin_id, coverage_desc) VALUES (%s, %s, %s, %s, %s)",
+                    (product_id, product_name, description, admin_id, coverage_array_str))
+            connection.commit()
+            st.success("Product added successfully!")
+        except Exception as e:
+            st.error("An error occurred while adding the product:", e)
+            connection.rollback()
+
     # Function to display payment details form and handle the transaction
     def show_payment_details():
         st.write(f"You have chosen to buy: {st.session_state['selected_product']}")
@@ -208,3 +228,11 @@ if st.session_state.user_logged_in:
                         if col.button("Buy / Renew", key=f"buy_{index}"):
                             handle_buy(product['name'], product['id'])
                     index += 1
+        # Form for adding new products
+        if st.session_state['role'] == 'admin':
+            st.header("Add New Product")
+            product_name = st.text_input("Product Name")
+            description = st.text_area("Description")
+            coverage_desc = st.text_area("Coverage Description")
+            if st.button("➕Add Product"):
+                add_product(product_name, description, coverage_desc)
