@@ -282,6 +282,12 @@ def getDate(claim_id):
     end_date = cur.fetchall()
     return end_date[0][0]
 
+def getPolicyId(email):
+    query = f"select policy_id from insurehub.purchases pur join insurehub.customer cust on cust.cust_id = pur.cust_id where email = '{email}'"
+    cur.execute(query)
+    policy_ids = cur.fetchall()
+    return policy_ids
+
 	
 image_base64 = get_image_as_base64(logo)
 
@@ -300,8 +306,10 @@ if st.session_state['role'] == 'customer':
 
     # st.write('Here are your policies:')
 
-    policy_id = '7DB4D960-8AB5-7876-3B35-3465E625672D'
-
+    #policy_id = '7DB4D960-8AB5-7876-3B35-3465E625672D'
+    policy_ids = getPolicyId(st.session_state['username'])
+    list_of_policy_ids = [item[0] for item in policy_ids]
+    print("policy_ids are: ",list_of_policy_ids)
 
     if 'selected_claim' not in st.session_state:
         st.session_state.selected_claim = None
@@ -317,24 +325,25 @@ if st.session_state['role'] == 'customer':
                 st.experimental_rerun()
         else:
             with st.container():
-                rows, columns = getClaimDetails(policy_id)
-                df = pd.DataFrame(rows, columns=columns)
-                columns = ['claim_id', 'claim_amount', 'status', 'date_filed', 'claim_sett_dt', 'policy_id']
-                df = df[columns]
-                df = df.rename(columns={'claim_id': 'CLAIM ID', 'claim_amount': 'CLAIM AMOUNT', 'status': 'STATUS', 'date_filed': 'DATE FILED', 'claim_sett_dt': 'CLAIM SETTLEMENT DATE' ,'policy_id': 'POLICY ID' })
-                
-                # Display policies with buttons to select for more details
-                for claim_id in df['CLAIM ID']:
-                    #st.write(f"Policy ID: {policy_id}")
-                    st.markdown(f"""
-                        <div style="border: 1px solid #ccc; margin: 10px 0; padding: 10px; border-radius: 5px; background-color: rgba(128, 128, 128, 0.1);">
-                            💠 Claim ID: {claim_id} <br>
-                            🔸 Status : {df['STATUS'].iloc[0]} <br>
-                            🔸 Settled On: {df['CLAIM SETTLEMENT DATE'].iloc[0]}
-                        </div>
-                    """, unsafe_allow_html=True)
+                for policy_id in list_of_policy_ids:
+                    print(policy_id)
+                    rows, columns = getClaimDetails(policy_id)
+                    df = pd.DataFrame(rows, columns=columns)
+                    columns = ['claim_id', 'claim_amount', 'status', 'date_filed', 'claim_sett_dt', 'policy_id']
+                    df = df[columns]
+                    df = df.rename(columns={'claim_id': 'CLAIM ID', 'claim_amount': 'CLAIM AMOUNT', 'status': 'STATUS', 'date_filed': 'DATE FILED', 'claim_sett_dt': 'CLAIM SETTLEMENT DATE' ,'policy_id': 'POLICY ID' })
+                    
+                    # Display policies with buttons to select for more details
+                    for claim_id in df['CLAIM ID']:
+                        st.markdown(f"""
+                            <div style="border: 1px solid #ccc; margin: 10px 0; padding: 10px; border-radius: 5px; background-color: rgba(128, 128, 128, 0.1);">
+                                💠 Claim ID: {claim_id} <br>
+                                🔸 Status : {df['STATUS'].iloc[0]} <br>
+                                🔸 Settled On: {df['CLAIM SETTLEMENT DATE'].iloc[0]}
+                            </div>
+                        """, unsafe_allow_html=True)
 
-                    st.button(f"View Details", key=claim_id, on_click=select_claim, args=(claim_id,))
+                        st.button(f"View Details", key=claim_id, on_click=select_claim, args=(claim_id,))
 
     if 'selected_claim' not in st.session_state or st.session_state['selected_claim'] is None:
         if 'file_claim' not in st.session_state or not st.session_state['file_claim']:
@@ -350,7 +359,6 @@ else:
     # st.write('Here are your policies:')
 
     policy_id = '7DB4D960-8AB5-7876-3B35-3465E625672D'
-
 
     if 'selected_claim' not in st.session_state:
         st.session_state.selected_claim = None

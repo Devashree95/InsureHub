@@ -32,6 +32,12 @@ if st.session_state.user_logged_in:
             data = base64.b64encode(image_file.read()).decode()
             return f"data:image/jpeg;base64,{data}"
         
+    def getCustId(email):
+        query = f"SELECT cust_id FROM insurehub.customer WHERE email = '{email}'"
+        cur.execute(query)
+        custId = cur.fetchall()
+        return custId[0][0]
+        
     def get_base64_of_file(path):
         with open(path, "rb") as file:
             return base64.b64encode(file.read()).decode()
@@ -96,6 +102,7 @@ if st.session_state.user_logged_in:
 
         if st.button("Back to Explore plans"):
             st.session_state['show_policy_details'] = False
+            st.rerun()
             return 
 
         
@@ -103,6 +110,7 @@ if st.session_state.user_logged_in:
         if st.button("Continue to Payment"):
             st.session_state['show_payment_details'] = True
             st.session_state['show_policy_details'] = False  # Hide policy details
+            st.rerun()
 
 
     # Define a function to add new products
@@ -146,9 +154,11 @@ if st.session_state.user_logged_in:
                 end_date = start_date + timedelta(days=365)
                 coverage_amt = '100000'
                 status = 'active'
-                custId = '2DECA7C8-395E-5B44-4A3B-C792143C9F45'
+                #custId = '2DECA7C8-395E-5B44-4A3B-C792143C9F45'
+                custId= getCustId(st.session_state['username'])
                 amount = 1000
 
+                print(custId)
                 
                 #insert the new policy ID and other details into the policy table
                 try:
@@ -174,20 +184,21 @@ if st.session_state.user_logged_in:
         if st.button("Back to Policy Details"):
             st.session_state['show_payment_details'] = False
             st.session_state['show_policy_details'] = True
+            st.rerun()
             return 
 
 
-        image_base64 = get_image_as_base64(logo)
+    image_base64 = get_image_as_base64(logo)
 
-        st.markdown(f"""
-                    <a href="/" style="color:white;text-decoration: none;">
-                        <div style="display:table;margin-top:-15 rem;margin-left:0%; display: flex;">
-                            <img src="{image_base64}" alt="Insurehub Logo" style="width:50px;height:40px;margin-left:750px; flex:2;" </img>
-                            <span style="padding:10px; flex:2;">{st.session_state['username']}</span>
-                        </div>
-                    </a>
-                    <br>
-                        """, unsafe_allow_html=True)
+    st.markdown(f"""
+                <a href="/" style="color:white;text-decoration: none;">
+                    <div style="display:table;margin-top:-15 rem;margin-left:0%; display: flex;">
+                        <img src="{image_base64}" alt="Insurehub Logo" style="width:50px;height:40px;margin-left:750px; flex:2;" </img>
+                        <span style="padding:10px; flex:2;">{st.session_state['username']}</span>
+                    </div>
+                </a>
+                <br>
+                    """, unsafe_allow_html=True)
 
     if 'show_policy_details' not in st.session_state and 'show_payment_details' not in st.session_state:
         st.title('Explore our plans! ☂️')
@@ -227,6 +238,7 @@ if st.session_state.user_logged_in:
                     
                         if col.button("Buy / Renew", key=f"buy_{index}"):
                             handle_buy(product['name'], product['id'])
+                            st.rerun()
                     index += 1
         # Form for adding new products
         if st.session_state['role'] == 'admin':

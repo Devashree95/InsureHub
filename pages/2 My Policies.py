@@ -71,6 +71,12 @@ def getRenewDate(policy_id):
     end_date = cur.fetchall()
     return end_date[0][0]
 
+def getCustId(email):
+    query = f"SELECT cust_id FROM insurehub.customer WHERE email = '{email}'"
+    cur.execute(query)
+    custId = cur.fetchall()
+    return custId[0][0]
+
 def cancel_policy(policy_id):
     cancel_query = f"UPDATE insurehub.policy SET status = 'cancelled' WHERE policy_id = '{policy_id}'"
     cur.execute(cancel_query)
@@ -122,7 +128,8 @@ st.title('All Policies:')
 
 # st.write('Here are your policies:')
 
-custId = '2DECA7C8-395E-5B44-4A3B-C792143C9F45'
+#custId = '2DECA7C8-395E-5B44-4A3B-C792143C9F45'
+custId = getCustId(st.session_state['username'])
 
 if 'selected_policy' not in st.session_state:
     st.session_state.selected_policy = None

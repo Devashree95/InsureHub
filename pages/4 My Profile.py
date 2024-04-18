@@ -45,6 +45,12 @@ if st.session_state.user_logged_in:
         </style>
         """
         st.markdown(css, unsafe_allow_html=True)
+
+    def getCustId(email):
+        query = f"SELECT cust_id FROM insurehub.customer WHERE email = '{email}'"
+        cur.execute(query)
+        custId = cur.fetchall()
+        return custId[0][0]
         
     set_background_from_local_file('./images/login_background.png')
         
@@ -62,7 +68,8 @@ if st.session_state.user_logged_in:
                 <br>
                     """, unsafe_allow_html=True)
 
-    custId = '2DECA7C8-395E-5B44-4A3B-C792143C9F45'
+    #custId = '2DECA7C8-395E-5B44-4A3B-C792143C9F45'
+    custId = getCustId(st.session_state['username'])
 
     def getProfileDetails(attr):
         cur.execute(f"select {attr} from insurehub.customer where cust_id = '{custId}'")
