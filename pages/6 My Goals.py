@@ -45,6 +45,19 @@ if st.session_state.user_logged_in:
         </style>
         """
         st.markdown(css, unsafe_allow_html=True)
+    
+    def get_user_name(email):
+        query = f"SELECT name FROM insurehub.users_test WHERE username = '{email}'"
+        cur.execute(query)
+        custId = cur.fetchall()
+        return custId[0][0]
+    
+    def get_agent_id(email):
+        query = f"SELECT agent_id FROM insurehub.relationship_manager WHERE email = '{email}'"
+        cur.execute(query)
+        custId = cur.fetchall()
+        return custId[0][0]
+
         
     set_background_from_local_file('./images/login_background.png')
         
@@ -61,7 +74,8 @@ if st.session_state.user_logged_in:
                 <br>
                     """, unsafe_allow_html=True)
 
-    agent_id = '2A54EEDC-F811-129B-9A6C-D32E17EBAA0C'
+    #agent_id = '2A54EEDC-F811-129B-9A6C-D32E17EBAA0C'
+    agent_id = get_agent_id(st.session_state['username'])
     new_goal_id = str(uuid.uuid4()).upper()
 
     def fetch_goals():
@@ -75,21 +89,22 @@ if st.session_state.user_logged_in:
         cur.execute(query)
         connection.commit()
 
-    def add_goal(new_goal_id, rev, date, agent_id):
-        query = f"INSERT INTO insurehub.goal VALUES ('{new_goal_id}', '{rev}', '{date}', 'Created', '{agent_id}' )"
+    def add_goal(name, rev, desc, date):
+        query = f"INSERT INTO insurehub.goal VALUES ('{new_goal_id}', '{rev}', '{date}', 'Created', '{agent_id}', '{name}', '{desc}' )"
         cur.execute(query)
         connection.commit()
 
-    def update_goal(goal_id, new_rev, new_date):
-        query = f"UPDATE insurehub.goal SET tar_rev_per_mon = '{new_rev}', target_date = '{new_date}' WHERE goal_id = '{goal_id}'"
+    def update_goal(goal_id, new_rev, new_date, new_status):
+        query = f"UPDATE insurehub.goal SET tar_rev_per_mon = '{new_rev}', target_date = '{new_date}', status = '{new_status}' WHERE tar_rev_per_mon = '{goal_id}'"
         cur.execute(query)
         connection.commit()
 
 
     if st.session_state['role'] == 'agent':
         st.title("My Goals 🎯")
+        name = get_user_name(st.session_state['username'])
 		
-        st.markdown("<h2 style='color: #ffffff;'>Welcome, Shalini</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='color: #ffffff;'>Welcome, {name}!</h2>", unsafe_allow_html=True)
 
 
         st.subheader("⚡Add a new goal:")
@@ -116,6 +131,7 @@ if st.session_state.user_logged_in:
                 st.write(f"- {goal[1]}")  # Display goal name
             selected_goal_name = st.selectbox("Select a Goal to Manage", options=[goal[1] for goal in goals])
             selected_goal = next(goal for goal in goals if goal[1] == selected_goal_name)
+            print(selected_goal_name)
 
             with st.form("goal_management"):
                 new_rev = st.text_input("Target Revenue", value=str(selected_goal[1]))
