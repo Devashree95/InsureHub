@@ -1,5 +1,4 @@
 import streamlit as st
-import helpers.sidebar
 from PIL import Image
 import base64
 import uuid
@@ -16,8 +15,6 @@ if st.session_state.user_logged_in:
     connection = conn.pgsql_connect()
     cur = connection.cursor()
 
-    
-    helpers.sidebar.show()
 
     logo = "./images/profile_3135715.png"
     image = Image.open(logo)

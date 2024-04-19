@@ -9,8 +9,7 @@ from helpers.Insurehub_Login import login_snippet
 
 st.set_page_config(
 	page_title="InsureHub",
-	page_icon="📄",
-    layout="wide"
+	page_icon="📄"
 )
 
 
@@ -91,7 +90,7 @@ if st.session_state.user_logged_in:
                 <br>
                     """, unsafe_allow_html=True)
 
-    helpers.sidebar.show()
+    # helpers.sidebar.show()
 
     st.markdown("<h2>Welcome to InsureHub</h2>", unsafe_allow_html=True)
     # Define the content of the section

@@ -1,15 +1,11 @@
 import streamlit as st
-import helpers.sidebar
 import pandas as pd
-import streamlit.components.v1 as components
-from datetime import datetime
 from PIL import Image
 import base64
 
 from helpers import connection as conn
 
 
-helpers.sidebar.show()
 connection = conn.pgsql_connect()
 cur = connection.cursor()
 

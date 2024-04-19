@@ -9,3 +9,4 @@ streamlit_option_menu
 psycopg2-binary
 python-dotenv
 streamlit-authenticator
+st-pages
