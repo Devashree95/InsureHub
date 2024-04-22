@@ -174,14 +174,14 @@ def agent_show_claim_details(claim_id):
                 approve_claim(claim_id)
                 st.success('Claim Approved')
                 # Optionally, rerun to refresh the data
-                st.experimental_rerun()
+                st.rerun()
 
         with col2:
             if st.button('Reject Claim', key=f'reject_{claim_id}'):
                 reject_claim(claim_id) 
                 st.error('Claim Rejected')
                 # Optionally, rerun to refresh the data
-                st.experimental_rerun()
+                st.rerun()
     else:
         st.error("Policy details could not be found.")
 
@@ -246,7 +246,7 @@ def file_claim_form():
     if not submit_button:
         if st.button("Back"):
             st.session_state['file_claim'] = False
-            st.experimental_rerun()
+            st.rerun()
 
 
 
@@ -325,7 +325,7 @@ if st.session_state['role'] == 'customer':
             
             if st.button("Back to Claims List", key=f"back_to_list_{st.session_state['selected_claim']}"):
                 st.session_state.selected_claim = None
-                st.experimental_rerun()
+                st.rerun()
         else:
             with st.container():
                 for policy_id in list_of_policy_ids:
@@ -376,7 +376,7 @@ elif st.session_state['role'] == 'agent':
             
             if st.button("Back to Claims List", key=f"back_to_list_{st.session_state['selected_claim']}"):
                 st.session_state.selected_claim = None
-                st.experimental_rerun()
+                st.rerun()
         else:
             with st.container():
                 for policy_id in list_of_policy_ids:

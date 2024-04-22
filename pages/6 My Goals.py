@@ -119,7 +119,7 @@ if st.session_state.user_logged_in:
             if submit_button:
                 add_goal(name, rev, desc, date)
                 st.success("Goal added successfully!🎉")
-                st.experimental_rerun()
+                st.rerun()
                 
         st.subheader("⚡Manage Existing Goals")
 
@@ -141,14 +141,14 @@ if st.session_state.user_logged_in:
                 if submit_button:
                     update_goal(selected_goal_name, new_rev, new_date, new_status)
                     st.success("Goal updated successfully! 🎉")
-                    st.experimental_rerun()
+                    st.rerun()
 
         # Place the Delete button in a separate container to ensure it's not mistaken for a form submission action
         if goals and 'selected_goal_name' in locals():
             if st.button("🗑️ Delete Goal"):
                 delete_goal(selected_goal_name)
                 st.success("Goal deleted successfully! ✔️")
-                st.experimental_rerun()
+                st.rerun()
         else:
             st.write("No goals available to manage.")
  

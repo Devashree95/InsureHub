@@ -41,7 +41,6 @@ def login_snippet(key="login"):
                 st.session_state['username'] = email
                 cur.execute("SELECT role FROM insurehub.users_test WHERE username = %s", (email,))
                 st.session_state['role'] = cur.fetchone()[0]
-                print("The role is: ",st.session_state['role'])
                 # If submit, check if the email exists in the database
                 cur.execute("SELECT EXISTS (SELECT 1 FROM insurehub.users_test WHERE username = %s)", (email,))
                 email_exists = cur.fetchone()
@@ -91,7 +90,7 @@ def login_snippet(key="login"):
                 # Reset the relevant session states to display the login form again
                 st.session_state.show_login = True
                 st.session_state.button_clicked = False
-                st.experimental_rerun()
+                st.rerun()
 
             if submit_account:
                 bytes = new_password.encode('utf-8')
@@ -106,7 +105,7 @@ def login_snippet(key="login"):
                     st.session_state['username'] = new_email
                     placeholder.empty()
                     st.session_state.user_logged_in = True
-                    st.experimental_rerun()
+                    st.rerun()
                     return True
                     # st.session_state.show_login = True
                     # placeholder.empty()

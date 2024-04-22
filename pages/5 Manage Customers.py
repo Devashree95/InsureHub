@@ -104,7 +104,7 @@ if st.session_state.user_logged_in:
             if submit_button:
                 add_customer(fname, lname, email, dob, address)
                 st.success("Customer added successfully!")
-                st.experimental_rerun()
+                st.rerun()
 
         # Display existing customers
         st.title("📒Existing Accounts:")
@@ -119,7 +119,7 @@ if st.session_state.user_logged_in:
 
                 if st.button("🗑️Remove Account", key=f"delete_{customer[0]}"):
                     delete_customer(customer[0])
-                    st.experimental_rerun()
+                    st.rerun()
 
         st.title("📊Statistics")
         st.write("Total number of customers under management: ", len(customers))
