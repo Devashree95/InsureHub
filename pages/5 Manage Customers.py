@@ -110,5 +110,34 @@ if st.session_state.user_logged_in:
                 if st.button("🗑️Remove Account", key=f"delete_{customer[0]}"):
                     delete_customer(customer[0])
                     st.experimental_rerun()
+
+        st.title("📊Statistics")
+        st.write("Total number of customers under management: ", len(customers))
+        
+        min_coverage_query = f"SELECT MIN(po.tot_coverage_amt) AS min_coverage_amount FROM insurehub.customer cu JOIN insurehub.purchases p ON cu.cust_id = p.cust_id JOIN insurehub.policy po ON p.policy_id = po.policy_id WHERE cu.agent_id = '{agent_id}'"
+        cur.execute(min_coverage_query)
+        min_coverage = cur.fetchone()[0]
+        st.write("Minimum coverage amount: ", min_coverage)
+
+        max_coverage_query = f"SELECT MAX(po.tot_coverage_amt) AS max_coverage_amount FROM insurehub.customer cu JOIN insurehub.purchases p ON cu.cust_id = p.cust_id JOIN insurehub.policy po ON p.policy_id = po.policy_id WHERE cu.agent_id = '{agent_id}'"
+        cur.execute(max_coverage_query)
+        max_coverage = cur.fetchone()[0]
+        st.write("Maximum coverage amount: ", max_coverage)
+
+        avg_coverage_query = f"SELECT AVG(po.tot_coverage_amt) AS avg_coverage_amount FROM insurehub.customer cu JOIN insurehub.purchases p ON cu.cust_id = p.cust_id JOIN insurehub.policy po ON p.policy_id = po.policy_id WHERE cu.agent_id = '{agent_id}'"
+        cur.execute(avg_coverage_query)
+        avg_coverage = cur.fetchone()[0]
+        st.write("Average coverage amount: ", avg_coverage)
+
+        total_policies_query = f"SELECT COUNT(p.policy_id) AS total_policies FROM insurehub.customer cu JOIN insurehub.purchases p ON cu.cust_id = p.cust_id WHERE cu.agent_id = '{agent_id}'"
+        cur.execute(total_policies_query)
+        total_policies = cur.fetchone()[0]
+        st.write("Total number of policies under management: ", total_policies)
+
+        sum_coverage_query = f"SELECT SUM(po.tot_coverage_amt) AS sum_coverage_amount FROM insurehub.customer cu JOIN insurehub.purchases p ON cu.cust_id = p.cust_id JOIN insurehub.policy po ON p.policy_id = po.policy_id WHERE cu.agent_id = '{agent_id}'"
+        cur.execute(sum_coverage_query)
+        sum_coverage = cur.fetchone()[0]
+        st.write("Total coverage amount under management: ", sum_coverage)
+
     else:
         st.warning("You don't have access to this page.")
