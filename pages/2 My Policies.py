@@ -40,8 +40,12 @@ def set_background_from_local_file(path):
 set_background_from_local_file('./images/login_background.png')
     
 def getPolicyDetails(custId):
-    cur.execute(f"select pl.* from insurehub.policy pl join insurehub.purchases pur on pl.policy_id = pur.policy_id where cust_id = '{custId}'")
-    
+    if st.session_state['role'] == 'customer':
+        cur.execute(f"select pl.* from insurehub.policy pl join insurehub.purchases pur on pl.policy_id = pur.policy_id where cust_id = '{custId}'")
+    else:
+        custList = ','.join(['%s'] * len(custId))
+        query = (f"select pl.* from insurehub.policy pl join insurehub.purchases pur on pl.policy_id = pur.policy_id where cust_id in ({custList})")
+        cur.execute(query, custId)
     rows = cur.fetchall()
     columns = [desc[0] for desc in cur.description]
     return rows, columns
@@ -68,10 +72,20 @@ def getRenewDate(policy_id):
     return end_date[0][0]
 
 def getCustId(email):
-    query = f"SELECT cust_id FROM insurehub.customer WHERE email = '{email}'"
+    if st.session_state['role'] == 'customer':
+        query = f"SELECT cust_id FROM insurehub.customer WHERE email = '{email}'"
+    elif st.session_state['role'] == 'agent':
+        query = f"""select cust_id from insurehub.customer cst
+                    join
+                    insurehub.relationship_manager rm
+                    on cst.agent_id = rm.agent_id
+                    where rm.email = '{email}'"""
     cur.execute(query)
     custId = cur.fetchall()
-    return custId[0][0]
+    if len(custId) > 0:
+        return custId
+    else:
+        return ''
 
 def cancel_policy(policy_id):
     cancel_query = f"UPDATE insurehub.policy SET status = 'cancelled' WHERE policy_id = '{policy_id}'"
@@ -120,43 +134,55 @@ st.markdown(f"""
 				""", unsafe_allow_html=True)
 
 
-st.title('All Policies:')
+if st.session_state['role'] != 'admin':
+    st.title('All Policies:')
 
-# st.write('Here are your policies:')
+    # st.write('Here are your policies:')
 
-#custId = '2DECA7C8-395E-5B44-4A3B-C792143C9F45'
-custId = getCustId(st.session_state['username'])
+    #custId = '2DECA7C8-395E-5B44-4A3B-C792143C9F45'
+    if st.session_state['role'] == 'customer':
+        custId = getCustId(st.session_state['username'])[0][0]
+    else:
+        custId = getCustId(st.session_state['username'])
+        custId = [item[0] for item in custId]
+        print(custId)
 
-if 'selected_policy' not in st.session_state:
-    st.session_state.selected_policy = None
 
-if st.session_state['selected_policy']:
-    show_policy_details(st.session_state.selected_policy)
-    if st.button("Cancel Policy", key=f"cancel_policy_{st.session_state['selected_policy']}"):
-        cancel_policy(st.session_state['selected_policy'])
-      
-    # Button to go back to the policy list
-    if st.button("Back to Policy List", key=f"back_to_list_{st.session_state['selected_policy']}"):
+    if 'selected_policy' not in st.session_state:
         st.session_state.selected_policy = None
-else:
-    st.subheader('Self policies:')
-    # Assuming getPolicyDetails and the DataFrame setup are defined as before
-    with st.container():
-        rows, columns = getPolicyDetails(custId)
-        df = pd.DataFrame(rows, columns=columns)
-        columns = ['policy_id', 'start_date', 'end_date', 'tot_coverage_amt']
-        df = df[columns]
-        df = df.rename(columns={'policy_id': 'POLICY ID', 'start_date': 'START DATE', 'end_date': 'END DATE', 'tot_coverage_amt': 'Coverage Amount'})
+
+    if st.session_state['selected_policy']:
+        show_policy_details(st.session_state.selected_policy)
+        if st.button("Cancel Policy", key=f"cancel_policy_{st.session_state['selected_policy']}"):
+            cancel_policy(st.session_state['selected_policy'])
         
-        # Display policies with buttons to select for more details
-        for policy_id in df['POLICY ID']:
-            #st.write(f"Policy ID: {policy_id}")
-            st.markdown(f"""
-                <div style="border: 1px solid #ccc; margin: 10px 0; padding: 10px; border-radius: 5px; background-color: rgba(128, 128, 128, 0.1);">
-                 💠 Policy ID: {policy_id} <br>
-                 🔸 Status : {getStatus(policy_id)} <br>
-                 🔸 Renewal Date: {getRenewDate(policy_id)} 
-                </div>
-            """, unsafe_allow_html=True)
+        # Button to go back to the policy list
+        if st.button("Back to Policy List", key=f"back_to_list_{st.session_state['selected_policy']}"):
+            st.session_state.selected_policy = None
+            st.rerun()
+    else:
+        st.subheader('Self policies:')
+        if custId == '':
+            st.warning("No policies to display.")
+        # Assuming getPolicyDetails and the DataFrame setup are defined as before
+        with st.container():
+            rows, columns = getPolicyDetails(custId)
+            df = pd.DataFrame(rows, columns=columns)
+            columns = ['policy_id', 'start_date', 'end_date', 'tot_coverage_amt']
+            df = df[columns]
+            df = df.rename(columns={'policy_id': 'POLICY ID', 'start_date': 'START DATE', 'end_date': 'END DATE', 'tot_coverage_amt': 'Coverage Amount'})
             
-            st.button(f"View Details", key=policy_id, on_click=select_policy, args=(policy_id,))
+            # Display policies with buttons to select for more details
+            for policy_id in df['POLICY ID']:
+                #st.write(f"Policy ID: {policy_id}")
+                st.markdown(f"""
+                    <div style="border: 1px solid #ccc; margin: 10px 0; padding: 10px; border-radius: 5px; background-color: rgba(128, 128, 128, 0.1);">
+                    💠 Policy ID: {policy_id} <br>
+                    🔸 Status : {getStatus(policy_id)} <br>
+                    🔸 Renewal Date: {getRenewDate(policy_id)} 
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                st.button(f"View Details", key=policy_id, on_click=select_policy, args=(policy_id,))
+else:
+    st.warning("Nothing to show here.")

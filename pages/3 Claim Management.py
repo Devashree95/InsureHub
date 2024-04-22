@@ -279,7 +279,15 @@ def getDate(claim_id):
     return end_date[0][0]
 
 def getPolicyId(email):
-    query = f"select policy_id from insurehub.purchases pur join insurehub.customer cust on cust.cust_id = pur.cust_id where email = '{email}'"
+    if st.session_state['role'] == 'customer':
+        query = f"select policy_id from insurehub.purchases pur join insurehub.customer cust on cust.cust_id = pur.cust_id where email = '{email}'"
+    else:
+        query = f"""select policy_id from insurehub.purchases pur 
+                    join insurehub.customer cust 
+                    on cust.cust_id = pur.cust_id 
+                    join insurehub.relationship_manager rm
+                    on cust.agent_id = rm.agent_id
+                    where rm.email = '{email}'"""
     cur.execute(query)
     policy_ids = cur.fetchall()
     return policy_ids
@@ -305,7 +313,6 @@ if st.session_state['role'] == 'customer':
     #policy_id = '7DB4D960-8AB5-7876-3B35-3465E625672D'
     policy_ids = getPolicyId(st.session_state['username'])
     list_of_policy_ids = [item[0] for item in policy_ids]
-    print("policy_ids are: ",list_of_policy_ids)
 
     if 'selected_claim' not in st.session_state:
         st.session_state.selected_claim = None
@@ -349,12 +356,14 @@ if st.session_state['role'] == 'customer':
             if st.button('File a New Claim'):
                 st.session_state['file_claim'] = True
 
-else:
+elif st.session_state['role'] == 'agent':
     st.header("Manage Claims")
 
     # st.write('Here are your policies:')
 
-    policy_id = '7DB4D960-8AB5-7876-3B35-3465E625672D'
+    #policy_id = '7DB4D960-8AB5-7876-3B35-3465E625672D'
+    policy_ids = getPolicyId(st.session_state['username'])
+    list_of_policy_ids = [item[0] for item in policy_ids]
 
     if 'selected_claim' not in st.session_state:
         st.session_state.selected_claim = None
@@ -370,21 +379,25 @@ else:
                 st.experimental_rerun()
         else:
             with st.container():
-                rows, columns = getClaimDetails(policy_id)
-                df = pd.DataFrame(rows, columns=columns)
-                columns = ['claim_id', 'claim_amount', 'status', 'date_filed', 'claim_sett_dt', 'policy_id']
-                df = df[columns]
-                df = df.rename(columns={'claim_id': 'CLAIM ID', 'claim_amount': 'CLAIM AMOUNT', 'status': 'STATUS', 'date_filed': 'DATE FILED', 'claim_sett_dt': 'CLAIM SETTLEMENT DATE' ,'policy_id': 'POLICY ID' })
-                
-                # Display policies with buttons to select for more details
-                for claim_id in df['CLAIM ID']:
-                    #st.write(f"Policy ID: {policy_id}")
-                    st.markdown(f"""
-                        <div style="border: 1px solid #ccc; margin: 10px 0; padding: 10px; border-radius: 5px; background-color: rgba(128, 128, 128, 0.1);">
-                            💠 Claim ID: {claim_id} <br>
-                            🔸 Status : {getStatus(claim_id)} <br>
-                            🔸 Settled On: {getDate(claim_id)}
-                        </div>
-                    """, unsafe_allow_html=True)
+                for policy_id in list_of_policy_ids:
+                    rows, columns = getClaimDetails(policy_id)
+                    df = pd.DataFrame(rows, columns=columns)
+                    columns = ['claim_id', 'claim_amount', 'status', 'date_filed', 'claim_sett_dt', 'policy_id']
+                    df = df[columns]
+                    df = df.rename(columns={'claim_id': 'CLAIM ID', 'claim_amount': 'CLAIM AMOUNT', 'status': 'STATUS', 'date_filed': 'DATE FILED', 'claim_sett_dt': 'CLAIM SETTLEMENT DATE' ,'policy_id': 'POLICY ID' })
+                    
+                    # Display policies with buttons to select for more details
+                    for claim_id in df['CLAIM ID']:
+                        #st.write(f"Policy ID: {policy_id}")
+                        st.markdown(f"""
+                            <div style="border: 1px solid #ccc; margin: 10px 0; padding: 10px; border-radius: 5px; background-color: rgba(128, 128, 128, 0.1);">
+                                💠 Claim ID: {claim_id} <br>
+                                🔸 Status : {getStatus(claim_id)} <br>
+                                🔸 Settled On: {getDate(claim_id)}
+                            </div>
+                        """, unsafe_allow_html=True)
 
-                    st.button(f"View Details", key=claim_id, on_click=select_claim, args=(claim_id,))
+                        st.button(f"View Details", key=claim_id, on_click=select_claim, args=(claim_id,))
+
+else:
+    st.warning('Nothing to show here.')

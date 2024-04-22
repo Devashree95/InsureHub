@@ -62,6 +62,12 @@ if st.session_state.user_logged_in:
         products_list = [{"id": row[0], "name": row[1], "description": row[2]} for row in rows]
         
         return products_list
+    
+    def get_admin_id(email):
+        query = f"SELECT admin_id FROM insurehub.admin WHERE email = '{email}'"
+        cur.execute(query)
+        custId = cur.fetchall()
+        return custId[0][0]
 
     def handle_buy(product_name, product_id):
         # Save the selected product name to the session state
@@ -113,7 +119,8 @@ if st.session_state.user_logged_in:
     # Define a function to add new products
     def add_product(product_name, description, coverage_desc):
         try:
-            admin_id='3457D733-E929-4BB1-9B82-B07A06BE76F3'
+            #admin_id='3457D733-E929-4BB1-9B82-B07A06BE76F3'
+            admin_id = get_admin_id(st.session_state['username'])
             product_id = str(uuid.uuid4())
             # Split the coverage description into lines and store each line in a list
             coverage_lines = coverage_desc.split('\n')
@@ -156,7 +163,7 @@ if st.session_state.user_logged_in:
                 amount = 1000
 
                 print(custId)
-                
+
                 #insert the new policy ID and other details into the policy table
                 try:
                     cur.execute(f"INSERT INTO insurehub.policy VALUES ('{policy_id}', '{start_date}', '{end_date}', '{coverage_amt}', '{st.session_state['selected_product_id']}', '{status}' ) ")

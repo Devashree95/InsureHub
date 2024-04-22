@@ -7,7 +7,6 @@ from helpers.Insurehub_Login import login_snippet
 import bcrypt
 
 
-
 if "user_logged_in" not in st.session_state or not st.session_state.user_logged_in:
     st.toast("You need to login to access this page.")
     user_logged_in = login_snippet(key="buy_or_renew_login")
@@ -50,6 +49,18 @@ if st.session_state.user_logged_in:
         cur.execute(query)
         custId = cur.fetchall()
         return custId[0][0]
+    
+    def getAgentId(email):
+        query = f"SELECT agent_id FROM insurehub.relationship_manager WHERE email = '{email}'"
+        cur.execute(query)
+        custId = cur.fetchall()
+        return custId[0][0]
+    
+    def getAdminId(email):
+        query = f"SELECT admin_id FROM insurehub.admin WHERE email = '{email}'"
+        cur.execute(query)
+        custId = cur.fetchall()
+        return custId[0][0]
         
     set_background_from_local_file('./images/login_background.png')
         
@@ -68,35 +79,87 @@ if st.session_state.user_logged_in:
                     """, unsafe_allow_html=True)
 
     #custId = '2DECA7C8-395E-5B44-4A3B-C792143C9F45'
-    custId = getCustId(st.session_state['username'])
+    if st.session_state['role'] == 'customer':
+        custId = getCustId(st.session_state['username'])
+    elif st.session_state['role'] == 'agent':
+        agentId = getAgentId(st.session_state['username'])
+    else: 
+        adminId = getAdminId(st.session_state['username'])
 
     def getProfileDetails(attr):
-        cur.execute(f"select {attr} from insurehub.customer where cust_id = '{custId}'")
+        if st.session_state['role'] == 'agent':
+            cur.execute(f"select {attr} from insurehub.relationship_manager where agent_id = '{agentId}'")
+        elif st.session_state['role'] == 'customer':
+            cur.execute(f"select {attr} from insurehub.customer where cust_id = '{custId}'")
+        else:
+            cur.execute(f"select {attr} from insurehub.admin where admin_id = '{adminId}'")
         return cur.fetchall()[0][0]
 
     def getPhoneDetails(attr):
-        cur.execute(f"select phone from insurehub.cust_phone where cust_id = '{custId}'")
+        if st.session_state['role'] == 'customer':
+            cur.execute(f"select phone from insurehub.cust_phone where cust_id = '{custId}'")
+        elif st.session_state['role'] == 'agent':
+            cur.execute(f"select phone from insurehub.rm_phone where agent_id = '{agentId}'")
+        else:
+            cur.execute(f"select phone from insurehub.admin_phone where admin_id = '{adminId}'")
         return cur.fetchall()
 
     def updateDbTable(attr, val):
-        print(val)
-        if attr == 'phone1':
-            cur.execute(f"update insurehub.cust_phone SET phone = '{val}' where cust_id = '{custId}' and phone= '{phone_no_1}'")
-            connection.commit()
-        elif attr == 'phone2':
-            if val == '':
-                cur.execute(f"delete from insurehub.cust_phone where cust_id = '{custId}' and phone= '{phone_no_2}'")
+        if st.session_state['role'] == 'customer':
+            if attr == 'phone1':
+                cur.execute(f"update insurehub.cust_phone SET phone = '{val}' where cust_id = '{custId}' and phone= '{phone_no_1}'")
                 connection.commit()
+            elif attr == 'phone2':
+                if val == '':
+                    cur.execute(f"delete from insurehub.cust_phone where cust_id = '{custId}' and phone= '{phone_no_2}'")
+                    connection.commit()
 
-            if phone_no_2 == '':
-                cur.execute(f"insert into insurehub.cust_phone VALUES ('{custId}','{val}')")
-                connection.commit()
+                if phone_no_2 == '':
+                    cur.execute(f"insert into insurehub.cust_phone VALUES ('{custId}','{val}')")
+                    connection.commit()
+                else:
+                    cur.execute(f"update insurehub.cust_phone SET phone = '{val}' where cust_id = '{custId}' and phone= '{phone_no_2}'")
+                    connection.commit()
             else:
-                cur.execute(f"update insurehub.cust_phone SET phone = '{val}' where cust_id = '{custId}' and phone= '{phone_no_2}'")
+                cur.execute(f"update insurehub.customer SET {attr} = '{val}' where cust_id = '{custId}'")
+                connection.commit()
+        elif st.session_state['role'] == 'agent':
+            if attr == 'phone1':
+                cur.execute(f"update insurehub.rm_phone SET phone = '{val}' where agent_id = '{agentId}' and phone= '{phone_no_1}'")
+                connection.commit()
+            elif attr == 'phone2':
+                if val == '':
+                    cur.execute(f"delete from insurehub.rm_phone where agent_id = '{agentId}' and phone= '{phone_no_2}'")
+                    connection.commit()
+
+                if phone_no_2 == '':
+                    cur.execute(f"insert into insurehub.rm_phone VALUES ('{agentId}','{val}')")
+                    connection.commit()
+                else:
+                    cur.execute(f"update insurehub.rm_phone SET phone = '{val}' where agent_id = '{agentId}' and phone= '{phone_no_2}'")
+                    connection.commit()
+            else:
+                cur.execute(f"update insurehub.relationship_manager SET {attr} = '{val}' where agent_id = '{agentId}'")
                 connection.commit()
         else:
-            cur.execute(f"update insurehub.customer SET {attr} = '{val}' where cust_id = '{custId}'")
-            connection.commit()
+            if attr == 'phone1':
+                cur.execute(f"update insurehub.admin_phone SET phone = '{val}' where admin_id = '{adminId}' and phone= '{phone_no_1}'")
+                connection.commit()
+            elif attr == 'phone2':
+                if val == '':
+                    cur.execute(f"delete from insurehub.admin_phone where admin_id = '{adminId}' and phone= '{phone_no_2}'")
+                    connection.commit()
+
+                if phone_no_2 == '':
+                    cur.execute(f"insert into insurehub.admin_phone VALUES ('{adminId}','{val}')")
+                    connection.commit()
+                else:
+                    cur.execute(f"update insurehub.admin_phone SET phone = '{val}' where admin_id = '{adminId}' and phone= '{phone_no_2}'")
+                    connection.commit()
+            else:
+                cur.execute(f"update insurehub.admin SET {attr} = '{val}' where admin_id = '{adminId}'")
+                connection.commit()
+
 
     phone_no = getPhoneDetails('phone')
     if len(phone_no) == 1:
@@ -111,15 +174,24 @@ if st.session_state.user_logged_in:
 
     print("Phone 1 and phone 2 are", phone_no_1, phone_no_2)
 
-    profile = {
-        "first_name": getProfileDetails('first_name'),
-        "last_name": getProfileDetails('last_name'),
-        "email": getProfileDetails('email'),
-        "dob": getProfileDetails('dob'),
-        "address": getProfileDetails('address'),
-        "phone1": phone_no_1,
-        "phone2": phone_no_2
-    }
+    if st.session_state['role'] == 'customer':
+        profile = {
+            "first_name": getProfileDetails('first_name'),
+            "last_name": getProfileDetails('last_name'),
+            "email": getProfileDetails('email'),
+            "dob": getProfileDetails('dob'),
+            "address": getProfileDetails('address'),
+            "phone1": phone_no_1,
+            "phone2": phone_no_2
+        }
+    else:
+        profile = {
+            "first_name": getProfileDetails('first_name'),
+            "last_name": getProfileDetails('last_name'),
+            "email": getProfileDetails('email'),
+            "phone1": phone_no_1,
+            "phone2": phone_no_2
+        }
 
     def update_profile(first_name, last_name, email, dob, address, phone1, phone2):
         # Update profile data
@@ -139,23 +211,47 @@ if st.session_state.user_logged_in:
         updateDbTable("phone2", phone2)
         st.success("Profile updated successfully!")
 
+    def update_agent_admin_profile(first_name, last_name, email, phone1, phone2):
+        # Update profile data
+        profile["first_name"] = first_name
+        updateDbTable("first_name", first_name)
+        profile["last_name"] = last_name
+        updateDbTable("last_name", last_name)
+        profile["email"] = email
+        updateDbTable("email", email)
+        profile["phone1"] = phone1
+        updateDbTable("phone1", phone1)
+        profile["phone2"] = phone2
+        updateDbTable("phone2", phone2)
+        st.success("Profile updated successfully!")
+
     # Displaying the profile information
     st.header("My Profile")
 
     with st.form("profile_form"):
-        first_name = st.text_input("First Name", value=profile["first_name"])
-        last_name = st.text_input("Last Name", value=profile["last_name"])
-        email = st.text_input("Email", value=profile["email"])
-        dob = st.text_input("Date of Birth", value=profile["dob"])
-        address = st.text_input("Address", value=profile["address"])
-        phone1 = st.text_input("Phone 1", value=profile["phone1"])
-        phone2 = st.text_input("Phone 2", value=profile["phone2"])
+        if st.session_state['role'] == 'customer':
+            first_name = st.text_input("First Name", value=profile["first_name"])
+            last_name = st.text_input("Last Name", value=profile["last_name"])
+            email = st.text_input("Email", value=profile["email"])
+            dob = st.text_input("Date of Birth", value=profile["dob"])
+            address = st.text_input("Address", value=profile["address"])
+            phone1 = st.text_input("Phone 1", value=profile["phone1"])
+            phone2 = st.text_input("Phone 2", value=profile["phone2"])
+        else:
+            first_name = st.text_input("First Name", value=profile["first_name"])
+            last_name = st.text_input("Last Name", value=profile["last_name"])
+            email = st.text_input("Email", value=profile["email"])
+            phone1 = st.text_input("Phone 1", value=profile["phone1"])
+            phone2 = st.text_input("Phone 2", value=profile["phone2"])
         
         # Form submission button
         submit_button = st.form_submit_button(label="Update Profile")
         
         if submit_button:
-            update_profile(first_name, last_name, email, dob, address, phone1, phone2)
+            if st.session_state['role'] == 'customer':
+                update_profile(first_name, last_name, email, dob, address, phone1, phone2)
+            else:
+                update_agent_admin_profile(first_name, last_name, email, phone1, phone2)
 
 def change_password():
     with st.form(key='change_password_form'):

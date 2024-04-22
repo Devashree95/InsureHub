@@ -42,6 +42,12 @@ if st.session_state.user_logged_in:
         </style>
         """
         st.markdown(css, unsafe_allow_html=True)
+    
+    def get_agent_id(email):
+        query = f"SELECT agent_id FROM insurehub.relationship_manager WHERE email = '{email}'"
+        cur.execute(query)
+        custId = cur.fetchall()
+        return custId[0][0]
         
     set_background_from_local_file('./images/login_background.png')
         
@@ -58,8 +64,12 @@ if st.session_state.user_logged_in:
                 <br>
                     """, unsafe_allow_html=True)
 
-    agent_id = '0381AA78-BF6A-8C7E-23B7-36728C8C43D5'
-    custid = str(uuid.uuid4()).upper()
+    #agent_id = '0381AA78-BF6A-8C7E-23B7-36728C8C43D5'
+    if st.session_state['role'] == 'agent':
+        agent_id = get_agent_id(st.session_state['username'])
+        custid = str(uuid.uuid4()).upper()
+    else:
+        agent_id = ''
 
     def fetch_customers():
         query = f"SELECT * FROM insurehub.customer where agent_id = '{agent_id}'"  

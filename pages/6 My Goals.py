@@ -73,7 +73,8 @@ if st.session_state.user_logged_in:
                     """, unsafe_allow_html=True)
 
     #agent_id = '2A54EEDC-F811-129B-9A6C-D32E17EBAA0C'
-    agent_id = get_agent_id(st.session_state['username'])
+    if st.session_state['role'] == 'agent':
+        agent_id = get_agent_id(st.session_state['username'])
     new_goal_id = str(uuid.uuid4()).upper()
 
     def fetch_goals():
