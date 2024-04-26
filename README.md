@@ -2,6 +2,12 @@
 
 # CS5614: DBMS Application for Insurance Company using Streamlit and PostgreSQL
 
+# Team Members:
+  Devashree Bhagwat​ (devashreeb@vt.edu) <br>
+  Kanad Naleshwarkar​ (kanadn@vt.edu) <br>
+  Shalini Rama​ (shalinir22@vt.edu) <br>
+  Vasundhara Gowrishankar (vasundharag@vt.edu) <br>
+
 # Overview
 This project entails the development of a comprehensive database system tailored for an insurance
 company. The system is designed to efficiently manage and streamline various aspects of insurance
