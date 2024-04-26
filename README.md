@@ -1,6 +1,6 @@
 # Insurehub
 
-# DBMS Application using Streamlit and PostgreSQL
+# CS5614: DBMS Application for Insurance Company using Streamlit and PostgreSQL
 
 # Overview
 This project entails the development of a comprehensive database system tailored for an insurance
