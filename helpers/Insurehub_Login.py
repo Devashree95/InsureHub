@@ -39,18 +39,18 @@ def login_snippet(key="login"):
 
             if submit:
                 st.session_state['username'] = email
-                cur.execute("SELECT role FROM insurehub.users_test WHERE username = %s", (email,))
+                cur.execute("SELECT role FROM insurehub.users WHERE username = %s", (email,))
                 st.session_state['role'] = cur.fetchone()[0]
                 print("The role is:", st.session_state['role'])
                 # If submit, check if the email exists in the database
-                cur.execute("SELECT EXISTS (SELECT 1 FROM insurehub.users_test WHERE username = %s)", (email,))
+                cur.execute("SELECT EXISTS (SELECT 1 FROM insurehub.users WHERE username = %s)", (email,))
                 email_exists = cur.fetchone()
                 if not email_exists[0]:
                     st.toast("Invalid username")
                     st.stop()
 
                 # If submit, fetch password from the database
-                cur.execute("SELECT password FROM insurehub.users_test WHERE username = %s", (email,))
+                cur.execute("SELECT password FROM insurehub.users WHERE username = %s", (email,))
                 password = cur.fetchone()[0]
                 
                 bytes = input_password.encode('utf-8')
@@ -84,7 +84,7 @@ def login_snippet(key="login"):
                 new_password = st.text_input("Password", type="password", key="new_password")  # Use unique key
                 name = st.text_input("Name", key="name")
                 logged_in = False
-                role = st.selectbox("Role", ["customer", "agent", "admin"], key="role")
+                role = st.selectbox("Role", ["customer", "agent", "admin"], key="role_selector")
                 submit_account = st.form_submit_button("Create Account")
                 
             if st.button("Cancel"):
@@ -100,16 +100,15 @@ def login_snippet(key="login"):
                 hash = hash.decode('utf-8')
 
                 try:
-                    cur.execute("INSERT INTO insurehub.users_test (username, password, name, logged_in, role) VALUES (%s, %s, %s, %s, %s)", (new_email, hash, name, logged_in, role))
+                    cur.execute("INSERT INTO insurehub.users (username, password, name, logged_in, role) VALUES (%s, %s, %s, %s, %s)", (new_email, hash, name, logged_in, role))
                     connection.commit()
                     st.toast("Account created successfully")
                     st.session_state['username'] = new_email
                     placeholder.empty()
                     st.session_state.user_logged_in = True
-                    st.rerun()
+                    st.session_state['role'] = role
                     return True
-                    # st.session_state.show_login = True
-                    # placeholder.empty()
+                
                 except Exception as e:
                     st.error(f"Error: {e}")
                     print(f"Error: {e}")
