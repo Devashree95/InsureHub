@@ -42,3 +42,6 @@ Clone the Repository: git clone https://version.cs.vt.edu/kanadn/insurehub.git <
 Install Dependencies: pip install -r requirements.txt <br>
 Set up PostgreSQL: Ensure you have PostgreSQL installed and running. The schema and sql dump files are added in '/data' foder. Import these files to set up local db. Update the database connection details in .env file. <br>
 Run the Application: streamlit run .\Insurehub_Home.py <br>
+
+# ER Diagram:
+![ER Diagram](/images/er_diagram.png)
